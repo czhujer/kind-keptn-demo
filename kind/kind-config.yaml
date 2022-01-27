@@ -34,7 +34,7 @@ networking:
 
 nodes:
   - role: control-plane
-    image: kindest/node:v1.23.1@sha256:355a1e3b7b0fe315c896f63a73847c554aac8fb8615c6bf47f1ca303009e9a2d
+    image: kindest/node:v1.22.4@sha256:ca3587e6e545a96c07bf82e2c46503d9ef86fc704f44c17577fca7bcabf5f978
 #  - role: control-plane
 #    image: kindest/node:v1.23.1@sha256:355a1e3b7b0fe315c896f63a73847c554aac8fb8615c6bf47f1ca303009e9a2d
 #  - role: control-plane

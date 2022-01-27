@@ -7,4 +7,5 @@ testing keptn.. with kind and cilium..
 - https://keptn.sh/docs/0.10.x/operate/multi_cluster/
 - https://medium.com/keptn/continuous-delivery-without-pipelines-7e84db8c8261
 - https://github.com/keptn/examples/blob/master/quickstart/multistage-delivery.sh
+- https://github.com/keptn-sandbox/keptn-on-k3s/blob/master/install-keptn-on-k3s.sh
 - 

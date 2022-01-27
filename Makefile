@@ -56,7 +56,15 @@ cilium-install:
 
 .PHONY: keptn-deploy
 keptn-deploy:
-	echo "T.B.D."
+	helm repo add keptn https://charts.keptn.sh
+	helm upgrade --install \
+		keptn keptn/keptn \
+		-n keptn \
+		--create-namespace \
+		--wait \
+		-f kind/kind-values-keptn.yaml
+	# helm install helm-service https://github.com/keptn/keptn/releases/download/${KEPTNVERSION}/helm-service-${KEPTNVERSION}.tgz -n keptn
+
 
 #.PHONY: install-nginx-ingress
 #install-nginx-ingress:

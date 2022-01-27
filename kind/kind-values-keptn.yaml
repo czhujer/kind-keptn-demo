@@ -1,0 +1,14 @@
+continuous-delivery:
+  enabled: false
+control-plane:
+  apiGatewayNginx:
+    type: ClusterIP
+  bridge:
+    installationType: QUALITY_GATES,CONTINUOUS_OPERATIONS
+  enabled: true
+#control-plane.ingress.enabled=true,
+#control-plane.ingress.annotations=<YOUR_ANNOTATIONS>,
+#control-plane.ingress.host=<YOUR_HOST>,
+#control-plane.ingress.path=<YOUR_PATH>,
+#control-plane.ingress.pathType=<YOUR_PATH_TYPE>,
+#control-plane.ingress.tls=<YOUR_TLS>
