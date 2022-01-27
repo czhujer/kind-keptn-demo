@@ -2,6 +2,7 @@
 export CLUSTER_NAME?=kind-keptn
 #export CILIUM_VERSION?=1.10.6
 export CILIUM_VERSION?=1.11.1
+export KEPTN_VERSION?=0.12.0
 
 .PHONY: kind-all
 #kind-all: kind-create kx-kind cilium-install deploy-cert-manager kiosk-install install-nginx-ingress deploy-prometheus-stack
@@ -63,8 +64,22 @@ keptn-deploy:
 		--create-namespace \
 		--wait \
 		-f kind/kind-values-keptn.yaml
-	# helm install helm-service https://github.com/keptn/keptn/releases/download/${KEPTNVERSION}/helm-service-${KEPTNVERSION}.tgz -n keptn
+	helm upgrade --install \
+		helm-service \
+		https://github.com/keptn/keptn/releases/download/$(KEPTN_VERSION)/helm-service-$(KEPTN_VERSION).tgz \
+		-n keptn
 
+.PHONY: keptn-set-login
+keptn-set-login:
+	kubectl create secret -n keptn generic bridge-credentials --from-literal="BASIC_AUTH_USERNAME=admin" --from-literal="BASIC_AUTH_PASSWORD=admin" -oyaml --dry-run=client | kubectl replace -f -
+	kubectl -n keptn rollout restart deployment bridge
+
+.PHONY: keptn-create-project-kiosk
+keptn-create-project-kiosk:
+	keptn create project kiosk --shipyard=keptn/kiosk/shipyard.yaml
+	keptn create service helloservice --project=kiosk
+	keptn add-resource --project=kiosk --service=helloservice --all-stages --resource=./helm/helloservice.tgz
+	keptn trigger delivery --project=kiosk --service=helloservice --image ghcr.io/podtato-head/podtatoserver:v0.1.1
 
 #.PHONY: install-nginx-ingress
 #install-nginx-ingress:
