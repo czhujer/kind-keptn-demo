@@ -3,10 +3,22 @@ export CLUSTER_NAME?=kind-keptn
 #export CILIUM_VERSION?=1.10.6
 export CILIUM_VERSION?=1.11.1
 
+.PHONY: kind-all
+#kind-all: kind-create kx-kind cilium-install deploy-cert-manager kiosk-install install-nginx-ingress deploy-prometheus-stack
+kind-all: kind-create kx-kind cilium-install keptn-deploy
+
 .PHONY: kind-create
 kind-create:
 	kind --version
 	kind create cluster --name $(CLUSTER_NAME) --config="kind/kind-config.yaml"
+	# for testing PSP
+	#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/privileged-psp.yaml
+	#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/baseline-psp.yaml
+	#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/restricted-psp.yaml
+	#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/kind/psp/cluster-roles.yaml
+	#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/kind/psp/role-bindings.yaml
+	# for more control planes, but no workers
+	# kubectl taint nodes --all node-role.kubernetes.io/master- || true
 
 .PHONY: kind-delete
 kind-delete:
@@ -41,6 +53,19 @@ cilium-install:
 	   --set bpf.masquerade=false \
 	   --set image.pullPolicy=IfNotPresent \
 	   --set ipam.mode=kubernetes
+
+.PHONY: keptn-deploy
+keptn-deploy:
+	echo "T.B.D."
+
+#.PHONY: install-nginx-ingress
+#install-nginx-ingress:
+#	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
+#	kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io ingress-nginx-admission
+#
+#.PHONY: deploy-cert-manager
+#deploy-cert-manager:
+#	kind/cert-manager_install.sh
 
 #.PHONY: k8s-apply
 #k8s-apply:
