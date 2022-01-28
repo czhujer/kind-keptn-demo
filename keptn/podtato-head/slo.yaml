@@ -22,6 +22,7 @@ objectives:
     pass:
       - criteria:
           - "<=100"
+          - ">0"
   - sli: go_info
     key_sli: true
     pass:

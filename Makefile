@@ -130,7 +130,7 @@ keptn-create-project-podtato-head:
 		--values "replicaCount=2" \
 		--values "serviceMonitor.enabled=true"
 	#
-	keptn trigger evaluation --project=podtato-head --service=helloservice --stage=dev --timeframe=5m
+	# keptn trigger evaluation --project=podtato-head --service=helloservice --stage=dev --timeframe=5m
 
 .PHONY: keptn-delete-project-podtato-head
 keptn-delete-project-podtato-head:

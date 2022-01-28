@@ -16,6 +16,8 @@ spec:
 #              properties:
 #                teststrategy: "performance"
             - name: "evaluation"
+              properties:
+                timeframe: 5m
             - name: "release"
     - name: "prod"
       sequences:
