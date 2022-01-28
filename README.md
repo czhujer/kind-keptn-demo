@@ -11,5 +11,6 @@ testing keptn.. with kind and cilium..
 - https://github.com/keptn-sandbox/keptn-on-k3s/blob/master/install-keptn-on-k3s.sh
 ### kpetn 7 ArgoCD
 - https://tutorials.keptn.sh/tutorials/keptn-argo-cd-deployment-07/index.html?index=..%2F..keptn07x#0
-### apps
+### example app podtato-head
 - https://github.com/podtato-head/podtato-head
+- https://github.com/podtato-head/podtato-head/blob/main/delivery/keptn/README.md
