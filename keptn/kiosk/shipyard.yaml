@@ -5,9 +5,18 @@ metadata:
   name: "shipyard-kiosk"
 spec:
   stages:
-    - name: "production"
+    - name: "dev"
       sequences:
         - name: "delivery"
+          tasks:
+            - name: "deployment"
+              properties:
+                deploymentstrategy: direct
+    - name: "prod"
+      sequences:
+        - name: "delivery"
+          triggeredOn:
+            - event: "dev.delivery.finished"
           tasks:
             - name: "deployment"
               properties:

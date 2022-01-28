@@ -1,12 +1,12 @@
 # Set environment variables
-export CLUSTER_NAME?=kind-keptn
+export CLUSTER_NAME?=keptn
 #export CILIUM_VERSION?=1.10.6
 export CILIUM_VERSION?=1.11.1
 export KEPTN_VERSION?=0.12.0
 
 .PHONY: kind-all
-#kind-all: kind-create kx-kind cilium-install deploy-cert-manager kiosk-install install-nginx-ingress deploy-prometheus-stack
-kind-all: kind-create kx-kind cilium-install keptn-deploy
+#kind-all: kind-create kx-kind cilium-install keptn-load-images deploy-cert-manager install-nginx-ingress deploy-prometheus-stack
+kind-all: kind-create kx-kind cilium-install keptn-load-images install-nginx-ingress # keptn-deploy
 
 .PHONY: kind-create
 kind-create:
@@ -33,10 +33,14 @@ kx-kind:
 cilium-install:
 	# pull image locally
 	docker pull quay.io/cilium/cilium:v$(CILIUM_VERSION)
+	docker pull quay.io/cilium/hubble-ui:v0.8.5
+	docker pull quay.io/cilium/hubble-ui-backend:v0.8.5
+	docker pull quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
 	# Load the image onto the cluster
-	kind load docker-image \
- 		--name $(CLUSTER_NAME) \
- 		quay.io/cilium/cilium:v$(CILIUM_VERSION)
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/cilium:v$(CILIUM_VERSION)
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/hubble-ui:v0.8.5
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/hubble-ui-backend:v0.8.5
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
 	# Add the Cilium repo
 	helm repo add cilium https://helm.cilium.io/
 	# install/upgrade the chart
@@ -55,6 +59,24 @@ cilium-install:
 	   --set image.pullPolicy=IfNotPresent \
 	   --set ipam.mode=kubernetes
 
+.PHONY: keptn-load-images
+keptn-load-images:
+	# pull image locally
+	docker pull docker.io/bitnami/mongodb:4.4.9-debian-10-r0
+	docker pull docker.io/keptn/distributor:$(KEPTN_VERSION)
+	docker pull docker.io/keptn/mongodb-datastore:$(KEPTN_VERSION)
+	docker pull nats:2.1.9-alpine3.12
+	docker pull synadia/prometheus-nats-exporter:0.5.0
+	docker pull docker.io/keptn/shipyard-controller:$(KEPTN_VERSION)
+	# Load the image onto the cluster
+	kind load docker-image --name $(CLUSTER_NAME) docker.io/bitnami/mongodb:4.4.9-debian-10-r0
+	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:$(KEPTN_VERSION)
+	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/mongodb-datastore:$(KEPTN_VERSION)
+	kind load docker-image --name $(CLUSTER_NAME) nats:2.1.9-alpine3.12
+	kind load docker-image --name $(CLUSTER_NAME) synadia/prometheus-nats-exporter:0.5.0
+	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/shipyard-controller:$(KEPTN_VERSION)
+
+KIND_IP := $(shell docker container inspect $(CLUSTER_NAME)-control-plane --format '{{ .NetworkSettings.Networks.kind.IPAddress }}')
 .PHONY: keptn-deploy
 keptn-deploy:
 	helm repo add keptn https://charts.keptn.sh
@@ -63,16 +85,21 @@ keptn-deploy:
 		-n keptn \
 		--create-namespace \
 		--wait \
+		--set=control-plane.ingress.host=bridge.127.0.0.1.nip.io \
 		-f kind/kind-values-keptn.yaml
 	helm upgrade --install \
 		helm-service \
 		https://github.com/keptn/keptn/releases/download/$(KEPTN_VERSION)/helm-service-$(KEPTN_VERSION).tgz \
 		-n keptn
+	kubectl apply -f keptn/crd-istio-destinationrules.yaml \
+				  -f keptn/crd-istio-virtualservices.yaml
+	# https://raw.githubusercontent.com/keptn-sandbox/keptn-in-a-box/master/resources/istio/public-gateway.yaml
 
 .PHONY: keptn-set-login
 keptn-set-login:
 	kubectl create secret -n keptn generic bridge-credentials --from-literal="BASIC_AUTH_USERNAME=admin" --from-literal="BASIC_AUTH_PASSWORD=admin" -oyaml --dry-run=client | kubectl replace -f -
 	kubectl -n keptn rollout restart deployment bridge
+    # keptn configure bridge –action=expose
 
 .PHONY: keptn-create-project-kiosk
 keptn-create-project-kiosk:
@@ -80,12 +107,23 @@ keptn-create-project-kiosk:
 	keptn create service helloservice --project=kiosk
 	keptn add-resource --project=kiosk --service=helloservice --all-stages --resource=./helm/helloservice.tgz
 	keptn trigger delivery --project=kiosk --service=helloservice --image ghcr.io/podtato-head/podtatoserver:v0.1.1
+	#
+#	keptn create service helloservice-new --project=kiosk
+#	keptn add-resource --project=kiosk --service=helloservice-new --all-stages --resource=./helm/helloservice-new.tgz
+#	keptn trigger delivery --project=kiosk --service=helloservice-new --image ghcr.io/podtato-head/podtatoserver:v0.1.1
 
-#.PHONY: install-nginx-ingress
-#install-nginx-ingress:
-#	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
-#	kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io ingress-nginx-admission
-#
+.PHONY: prepare-helm-charts
+prepare-helm-charts:
+	cd helm
+	tar -czvf helloservice.tgz helloserver/
+
+.PHONY: install-nginx-ingress
+install-nginx-ingress:
+	docker pull k8s.gcr.io/ingress-nginx/controller:v1.1.1
+	kind load docker-image --name $(CLUSTER_NAME) k8s.gcr.io/ingress-nginx/controller:v1.1.1
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
+	kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io ingress-nginx-admission
+
 #.PHONY: deploy-cert-manager
 #deploy-cert-manager:
 #	kind/cert-manager_install.sh
