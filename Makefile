@@ -101,17 +101,19 @@ keptn-set-login:
 	kubectl -n keptn rollout restart deployment bridge
     # keptn configure bridge –action=expose
 
-.PHONY: keptn-create-project-kiosk
-keptn-create-project-kiosk:
-	keptn create project kiosk --shipyard=keptn/kiosk/shipyard.yaml
-	keptn create service helloservice --project=kiosk
-	keptn add-resource --project=kiosk --service=helloservice --all-stages --resource=./helm/helloservice.tgz
-	keptn trigger delivery --project=kiosk --service=helloservice --image ghcr.io/podtato-head/podtatoserver:v0.1.1
+.PHONY: keptn-create-project-potato-head
+keptn-create-project-potato-head:
+	keptn create project potato-head --shipyard=keptn/potato-head/shipyard.yaml
+	keptn create service helloservice --project=potato-head
+	keptn add-resource --project=potato-head --service=helloservice --all-stages --resource=./helm/helloservice.tgz
+	keptn trigger delivery --project=potato-head --service=helloservice \
+		--image ghcr.io/podtato-head/podtatoserver:v0.1.1 \
+		--values "replicaCount=2"
 
-.PHONY: keptn-delete-project-kiosk
-keptn-delete-project-kiosk:
-	# keptn delete project kiosk
-	# keptn delete service helloservice -p kiosk
+.PHONY: keptn-delete-project-potato-head
+keptn-delete-project-potato-head:
+	# keptn delete project potato-head
+	# keptn delete service helloservice -p potato-head
 
 .PHONY: prepare-helm-charts
 prepare-helm-charts:
