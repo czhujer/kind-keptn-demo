@@ -128,7 +128,8 @@ keptn-create-project-podtato-head:
 	keptn trigger delivery --project=podtato-head --service=helloservice \
 		--image ghcr.io/podtato-head/podtatoserver:v0.1.1 \
 		--values "replicaCount=2" \
-		--values "replicaX=3"
+		--values "serviceMonitor.enabled=true"
+	#
 	keptn trigger evaluation --project=podtato-head --service=helloservice --stage=dev --timeframe=5m
 
 .PHONY: keptn-delete-project-podtato-head
@@ -144,7 +145,7 @@ keptn-deploy-slow-version-podtato-head:
 
 .PHONY: prepare-helm-charts
 prepare-helm-charts:
-	helm package ./helm/helloserver/ -d helm && mv helm/helloserver-0.2.3.tgz helm/helloservice.tgz
+	helm package ./helm/helloserver/ -d helm && mv helm/helloserver-0.3.1.tgz helm/helloservice.tgz
 
 .PHONY: install-nginx-ingress
 install-nginx-ingress:
@@ -172,12 +173,13 @@ deploy-prometheus-stack:
     --set kubeStateMetrics.enabled=false \
     --set nodeExporter.enabled=false \
     --set alertmanager.enabled=false,kubeApiServer.enabled=false \
-    --set kubelet.enabled=false \
-    --set kubeControllerManager.enabled=false,coredns.enabled=false \
-    --set prometheus.enabled=true \
+    --set kubelet.enabled=false,kubeProxy.enabled=false \
+    --set kubeControllerManager.enabled=false,coreDns.enabled=false \
+    --set kubeScheduler.enabled=false,kubeEtcd.enabled=false \
     --set grafana.enabled=false \
     --set prometheusOperator.admissionWebhooks.enabled=false \
-    --set prometheusOperator.tls.enabled=false
+    --set prometheusOperator.tls.enabled=false \
+    -f kind/kind-values-prometheus.yaml
 
 #.PHONY: k8s-apply
 #k8s-apply:

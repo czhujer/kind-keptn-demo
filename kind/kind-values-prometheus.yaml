@@ -1,0 +1,11 @@
+---
+prometheus:
+  enabled: true
+  ingress:
+    enabled: yes
+    hosts:
+      - prometheus.127.0.0.1.nip.io
+  prometheusSpec:
+    podMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false

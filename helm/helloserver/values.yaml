@@ -1,2 +1,22 @@
+# common vars
 image: ghcr.io/podtato-head/podtatoserver:v0.1.1
+
 replicaCount: 1
+
+# Service Monitor to collect Prometheus Metrics
+serviceMonitor:
+  enabled: false
+  # Additional labels
+  additionalLabels:
+  # key: value
+  # Override namespace (default is same than release)
+  namespace:
+
+  # Interval to scrape metrics
+  interval: 30s
+  # Timeout if metrics can't be retrieved in given time interval
+  scrapeTimeout: 25s
+  # Is TLS required for endpoint
+  secure: false
+  # TLS Configuration for endpoint
+  tlsConfig: {}
