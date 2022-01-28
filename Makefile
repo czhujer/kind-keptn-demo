@@ -5,8 +5,8 @@ export CILIUM_VERSION?=1.11.1
 export KEPTN_VERSION?=0.12.0
 
 .PHONY: kind-all
-#kind-all: kind-create kx-kind cilium-install deploy-prometheus-stack install-nginx-ingress keptn-load-images keptn-deploy deploy-cert-manager
-kind-all: kind-create kx-kind cilium-install deploy-prometheus-stack install-nginx-ingress keptn-load-images  # keptn-deploy
+#kind-all: kind-create kx-kind cilium-install deploy-prometheus-stack nginx-ingress-install keptn-load-images keptn-deploy deploy-cert-manager
+kind-all: kind-create kx-kind cilium-install deploy-prometheus-stack nginx-ingress-install keptn-load-images  # keptn-deploy
 
 .PHONY: kind-create
 kind-create:
@@ -46,6 +46,7 @@ cilium-install:
 	# install/upgrade the chart
 	helm upgrade --install cilium cilium/cilium --version $(CILIUM_VERSION) \
 	   -f kind/kind-values-cilium-hubble.yaml \
+	   -f kind/kind-values-cilium-service-monitors.yaml \
    	   --wait \
 	   --namespace kube-system \
 	   --set operator.replicas=1 \
@@ -57,7 +58,9 @@ cilium-install:
 	   --set hostPort.enabled=true \
 	   --set bpf.masquerade=false \
 	   --set image.pullPolicy=IfNotPresent \
-	   --set ipam.mode=kubernetes
+	   --set ipam.mode=kubernetes \
+	   --set prometheus.enabled=true \
+	   --set operator.prometheus.enabled=true
 
 .PHONY: keptn-load-images
 keptn-load-images:
@@ -147,16 +150,18 @@ keptn-deploy-slow-version-podtato-head:
 prepare-helm-charts:
 	helm package ./helm/helloserver/ -d helm && mv helm/helloserver-0.3.1.tgz helm/helloservice.tgz
 
-.PHONY: install-nginx-ingress
-install-nginx-ingress:
+.PHONY: nginx-ingress-install
+nginx-ingress-install:
 	docker pull k8s.gcr.io/ingress-nginx/controller:v1.1.1
 	kind load docker-image --name $(CLUSTER_NAME) k8s.gcr.io/ingress-nginx/controller:v1.1.1
-	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
-	kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io ingress-nginx-admission
-# TODO: switch installation of ingress-nginx into helm
-# https://github.com/ruzickap/k8s-tf-eks-argocd/pull/13/files
-# helm repo add --force-update ingress-nginx https://kubernetes.github.io/ingress-nginx
-#helm upgrade --install --version 4.0.16 --namespace ingress-nginx --create-namespace --wait --values - ingress-nginx ingress-nginx/ingress-nginx
+	helm repo add --force-update ingress-nginx https://kubernetes.github.io/ingress-nginx
+	helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+	  --namespace ingress-nginx \
+	  --create-namespace \
+	-f kind/kind-values-ingress-nginx.yaml
+
+#	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
+#	kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io ingress-nginx-admission
 
 #.PHONY: deploy-cert-manager
 #deploy-cert-manager:

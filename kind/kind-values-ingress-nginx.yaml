@@ -1,0 +1,16 @@
+---
+controller:
+  ingressClassResource:
+    default: true
+  watchIngressWithoutClass: true
+  service:
+    external:
+      enabled: false
+  extraArgs:
+    publish-status-address: localhost
+  metrics:
+    enabled: true
+#    serviceMonitor:
+#      enabled: true
+  hostPort:
+    enabled: true
