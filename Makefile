@@ -5,8 +5,8 @@ export CILIUM_VERSION?=1.11.1
 export KEPTN_VERSION?=0.12.0
 
 .PHONY: kind-all
-#kind-all: kind-create kx-kind cilium-install deploy-prometheus-stack nginx-ingress-install keptn-load-images keptn-deploy deploy-cert-manager
-kind-all: kind-create kx-kind cilium-install deploy-prometheus-stack nginx-ingress-install keptn-load-images  # keptn-deploy
+#kind-all: kind-create kx-kind cilium-load-images cilium-install deploy-prometheus-stack nginx-ingress-install keptn-load-images keptn-deploy deploy-cert-manager
+kind-all: kind-create kx-kind cilium-load-images cilium-install deploy-prometheus-stack nginx-ingress-install keptn-load-images  # keptn-deploy
 
 .PHONY: kind-create
 kind-create:
@@ -29,8 +29,8 @@ kind-delete:
 kx-kind:
 	kind export kubeconfig --name $(CLUSTER_NAME)
 
-.PHONY: cilium-install
-cilium-install:
+.PHONY: cilium-load-images
+cilium-load-images:
 	# pull image locally
 	docker pull quay.io/cilium/cilium:v$(CILIUM_VERSION)
 	docker pull quay.io/cilium/hubble-ui:v0.8.5
@@ -41,6 +41,9 @@ cilium-install:
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/hubble-ui:v0.8.5
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/hubble-ui-backend:v0.8.5
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
+
+.PHONY: cilium-install
+cilium-install:
 	# Add the Cilium repo
 	helm repo add cilium https://helm.cilium.io/
 	# install/upgrade the chart
