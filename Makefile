@@ -107,15 +107,15 @@ keptn-create-project-kiosk:
 	keptn create service helloservice --project=kiosk
 	keptn add-resource --project=kiosk --service=helloservice --all-stages --resource=./helm/helloservice.tgz
 	keptn trigger delivery --project=kiosk --service=helloservice --image ghcr.io/podtato-head/podtatoserver:v0.1.1
-	#
-#	keptn create service helloservice-new --project=kiosk
-#	keptn add-resource --project=kiosk --service=helloservice-new --all-stages --resource=./helm/helloservice-new.tgz
-#	keptn trigger delivery --project=kiosk --service=helloservice-new --image ghcr.io/podtato-head/podtatoserver:v0.1.1
+
+.PHONY: keptn-delete-project-kiosk
+keptn-delete-project-kiosk:
+	# keptn delete project kiosk
+	# keptn delete service helloservice -p kiosk
 
 .PHONY: prepare-helm-charts
 prepare-helm-charts:
-	cd helm
-	tar -czvf helloservice.tgz helloserver/
+	helm package ./helm/helloserver/ -d helm && mv helm/helloserver-0.2.3.tgz helm/helloservice.tgz
 
 .PHONY: install-nginx-ingress
 install-nginx-ingress:
