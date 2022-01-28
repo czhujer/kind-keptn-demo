@@ -74,6 +74,9 @@ keptn-load-images:
 	docker pull nats:2.1.9-alpine3.12
 	docker pull synadia/prometheus-nats-exporter:0.5.0
 	docker pull docker.io/keptn/shipyard-controller:$(KEPTN_VERSION)
+	docker pull docker.io/keptn/jmeter-service:0.8.4
+	docker pull keptncontrib/prometheus-service:0.7.2
+
 	# Load the image onto the cluster
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/bitnami/mongodb:4.4.9-debian-10-r0
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:$(KEPTN_VERSION)
@@ -81,6 +84,8 @@ keptn-load-images:
 	kind load docker-image --name $(CLUSTER_NAME) nats:2.1.9-alpine3.12
 	kind load docker-image --name $(CLUSTER_NAME) synadia/prometheus-nats-exporter:0.5.0
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/shipyard-controller:$(KEPTN_VERSION)
+	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/jmeter-service:0.8.4
+	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/prometheus-service:0.7.2
 
 KIND_IP := $(shell docker container inspect $(CLUSTER_NAME)-control-plane --format '{{ .NetworkSettings.Networks.kind.IPAddress }}')
 .PHONY: keptn-deploy
@@ -96,6 +101,9 @@ keptn-deploy:
 	helm upgrade --install \
 		helm-service \
 		https://github.com/keptn/keptn/releases/download/$(KEPTN_VERSION)/helm-service-$(KEPTN_VERSION).tgz \
+		-n keptn
+	helm upgrade --install \
+		jmeter-service https://github.com/keptn/keptn/releases/download/0.8.4/jmeter-service-0.8.4.tgz \
 		-n keptn
 	helm upgrade --install \
 			-n keptn \
@@ -126,8 +134,8 @@ keptn-create-project-podtato-head:
 	keptn add-resource --project=podtato-head --stage=dev --service=helloservice --resource=keptn/podtato-head/slo.yaml --resourceUri=slo.yaml
 	#
 	echo "Adding jmeter load tests to project podtato-head"
-	# keptn add-resource --project=podtato-head --stage=dev --service=helloservice --resource=keptn/podtato-head/jmeter/load.jmx --resourceUri=jmeter/load.jmx
-	# keptn add-resource --project=podtato-head --stage=dev --service=helloservice --resource=keptn/podtato-head/jmeter/jmeter.conf.yaml --resourceUri=jmeter/jmeter.conf.yaml
+	keptn add-resource --project=podtato-head --stage=dev --service=helloservice --resource=keptn/podtato-head/jmeter/load.jmx --resourceUri=jmeter/load.jmx
+	keptn add-resource --project=podtato-head --stage=dev --service=helloservice --resource=keptn/podtato-head/jmeter/jmeter.conf.yaml --resourceUri=jmeter/jmeter.conf.yaml
 	echo "enable prometheus monitoring"
 	keptn configure monitoring prometheus --project=podtato-head --service=helloservice
 	echo "trigger delivery"
@@ -138,12 +146,13 @@ keptn-create-project-podtato-head:
 	#
 	# keptn trigger evaluation --project=podtato-head --service=helloservice --stage=dev --timeframe=5m
 
-.PHONY: keptn-delete-project-podtato-head
-keptn-delete-project-podtato-head:
-	keptn delete project podtato-head
-	kubectl delete ns podtato-head-dev || true
-	kubectl delete ns podtato-head-prod || true
-	# keptn delete service helloservice -p podtato-head
+
+.PHONY: keptn-deploy-correct-version-podtato-head
+keptn-deploy-correct-version-podtato-head:
+	keptn trigger delivery --project=podtato-head --service=helloservice \
+			--image ghcr.io/podtato-head/podtatoserver:v0.1.1 \
+			--values "replicaCount=2" \
+			--values "serviceMonitor.enabled=true"
 
 .PHONY: keptn-deploy-slow-version-podtato-head
 keptn-deploy-slow-version-podtato-head:
@@ -152,6 +161,13 @@ keptn-deploy-slow-version-podtato-head:
 .PHONY: prepare-helm-charts
 prepare-helm-charts:
 	helm package ./helm/helloserver/ -d helm && mv helm/helloserver-0.3.1.tgz helm/helloservice.tgz
+
+.PHONY: keptn-delete-project-podtato-head
+keptn-delete-project-podtato-head:
+	keptn delete project podtato-head
+	kubectl delete ns podtato-head-dev || true
+	kubectl delete ns podtato-head-prod || true
+	# keptn delete service helloservice -p podtato-head
 
 .PHONY: nginx-ingress-install
 nginx-ingress-install:
