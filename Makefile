@@ -5,8 +5,8 @@ export CILIUM_VERSION?=1.11.1
 export KEPTN_VERSION?=0.12.0
 
 .PHONY: kind-all
-#kind-all: kind-create kx-kind cilium-install keptn-load-images deploy-cert-manager install-nginx-ingress deploy-prometheus-stack
-kind-all: kind-create kx-kind cilium-install keptn-load-images install-nginx-ingress # keptn-deploy
+#kind-all: kind-create kx-kind cilium-install deploy-prometheus-stack install-nginx-ingress keptn-load-images keptn-deploy deploy-cert-manager
+kind-all: kind-create kx-kind cilium-install deploy-prometheus-stack install-nginx-ingress keptn-load-images  # keptn-deploy
 
 .PHONY: kind-create
 kind-create:
@@ -91,6 +91,15 @@ keptn-deploy:
 		helm-service \
 		https://github.com/keptn/keptn/releases/download/$(KEPTN_VERSION)/helm-service-$(KEPTN_VERSION).tgz \
 		-n keptn
+	helm upgrade --install \
+			-n keptn \
+		  prometheus-service \
+		  https://github.com/keptn-contrib/prometheus-service/releases/download/0.7.2/prometheus-service-0.7.2.tgz \
+		  --set=prometheus.endpoint="http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090"
+	#
+	kubectl apply -n monitoring \
+ 		-f https://raw.githubusercontent.com/keptn-contrib/prometheus-service/0.7.2/deploy/role.yaml
+	#
 	kubectl apply -f keptn/crd-istio-destinationrules.yaml \
 				  -f keptn/crd-istio-virtualservices.yaml
 	# https://raw.githubusercontent.com/keptn-sandbox/keptn-in-a-box/master/resources/istio/public-gateway.yaml
@@ -106,15 +115,32 @@ keptn-create-project-podtato-head:
 	keptn create project podtato-head --shipyard=keptn/podtato-head/shipyard.yaml
 	keptn create service helloservice --project=podtato-head
 	keptn add-resource --project=podtato-head --service=helloservice --all-stages --resource=./helm/helloservice.tgz
+	echo "Adding keptn quality-gates to project podtato-head"
+	keptn add-resource --project=podtato-head --stage=dev --service=helloservice --resource=keptn/podtato-head/prometheus/sli.yaml --resourceUri=prometheus/sli.yaml
+	keptn add-resource --project=podtato-head --stage=dev --service=helloservice --resource=keptn/podtato-head/slo.yaml --resourceUri=slo.yaml
+	#
+	echo "Adding jmeter load tests to project podtato-head"
+	# keptn add-resource --project=podtato-head --stage=dev --service=helloservice --resource=keptn/podtato-head/jmeter/load.jmx --resourceUri=jmeter/load.jmx
+	# keptn add-resource --project=podtato-head --stage=dev --service=helloservice --resource=keptn/podtato-head/jmeter/jmeter.conf.yaml --resourceUri=jmeter/jmeter.conf.yaml
+	echo "enable prometheus monitoring"
+	keptn configure monitoring prometheus --project=podtato-head --service=helloservice
+	echo "trigger delivery"
 	keptn trigger delivery --project=podtato-head --service=helloservice \
 		--image ghcr.io/podtato-head/podtatoserver:v0.1.1 \
 		--values "replicaCount=2" \
 		--values "replicaX=3"
+	keptn trigger evaluation --project=podtato-head --service=helloservice --stage=dev --timeframe=5m
 
 .PHONY: keptn-delete-project-podtato-head
 keptn-delete-project-podtato-head:
-	# keptn delete project podtato-head
+	keptn delete project podtato-head
+	kubectl delete ns podtato-head-dev || true
+	kubectl delete ns podtato-head-prod || true
 	# keptn delete service helloservice -p podtato-head
+
+.PHONY: keptn-deploy-slow-version-podtato-head
+keptn-deploy-slow-version-podtato-head:
+	keptn trigger delivery --project="podtato-head" --service=helloservice --image="ghcr.io/podtato-head/podtatoserver" --tag=v0.1.2
 
 .PHONY: prepare-helm-charts
 prepare-helm-charts:
@@ -126,10 +152,32 @@ install-nginx-ingress:
 	kind load docker-image --name $(CLUSTER_NAME) k8s.gcr.io/ingress-nginx/controller:v1.1.1
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
 	kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io ingress-nginx-admission
+# TODO: switch installation of ingress-nginx into helm
+# https://github.com/ruzickap/k8s-tf-eks-argocd/pull/13/files
+# helm repo add --force-update ingress-nginx https://kubernetes.github.io/ingress-nginx
+#helm upgrade --install --version 4.0.16 --namespace ingress-nginx --create-namespace --wait --values - ingress-nginx ingress-nginx/ingress-nginx
 
 #.PHONY: deploy-cert-manager
 #deploy-cert-manager:
 #	kind/cert-manager_install.sh
+
+.PHONY: deploy-prometheus-stack
+deploy-prometheus-stack:
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	helm upgrade --install \
+	prometheus-stack \
+	prometheus-community/kube-prometheus-stack \
+	--namespace monitoring \
+    --create-namespace \
+    --set kubeStateMetrics.enabled=false \
+    --set nodeExporter.enabled=false \
+    --set alertmanager.enabled=false,kubeApiServer.enabled=false \
+    --set kubelet.enabled=false \
+    --set kubeControllerManager.enabled=false,coredns.enabled=false \
+    --set prometheus.enabled=true \
+    --set grafana.enabled=false \
+    --set prometheusOperator.admissionWebhooks.enabled=false \
+    --set prometheusOperator.tls.enabled=false
 
 #.PHONY: k8s-apply
 #k8s-apply:
