@@ -2,8 +2,18 @@
 spec_version: '1.0'
 indicators:
   go_info: go_info{namespace="$PROJECT-$STAGE",job="$SERVICE",service="$SERVICE"}
-  http_response_time_seconds_main_page_sum: sum(rate(http_server_request_duration_seconds_sum{namespace="$PROJECT-$STAGE",job="$SERVICE",service="$SERVICE",method="GET",route="/",status_code="200"}[$DURATION_SECONDS])/rate(http_server_request_duration_seconds_count{namespace="$PROJECT-$STAGE",job="$SERVICE",service="$SERVICE",method="GET",route="/",status_code="200"}[$DURATION_SECONDS]))
+  http_response_time_seconds_main_page_sum: sum(rate(http_server_request_duration_seconds_sum{namespace="$PROJECT-$STAGE",job="$SERVICE",service="$SERVICE",method="GET",route="/",status_code="200"}[$DURATION_SECONDS])/rate(http_server_request_duration_seconds_count{namespace="$PROJECT-$STAGE",job="$SERVICE",service="$SERVICE",method="GET",route="/",status_code="200"}[$DURATION_SECONDS]))  > 0 or vector(0)
   failing_request: promhttp_metric_handler_requests_total{code!="200",namespace="$PROJECT-$STAGE",job="$SERVICE"}
   http_requests_total_sucess: http_requests_total{status="success",namespace="$PROJECT-$STAGE",job="$SERVICE"}
   go_routines: go_goroutines{namespace="$PROJECT-$STAGE",job="$SERVICE"}
   request_throughput: sum(rate(http_requests_total{status="success",namespace="$PROJECT-$STAGE",job="$SERVICE"}[$DURATION_SECONDS]))
+
+# rate(http_requests_total[5m])
+
+#sum(rate(http_server_request_duration_seconds_sum{method="GET",route="/",status_code="200"}[5m])
+#/
+#rate(http_server_request_duration_seconds_count{method="GET",route="/",status_code="200"}[5m]))
+
+#sum(rate(http_server_request_duration_seconds_sum{method="GET",route="/",status_code="200"}[5m]) or vector(0)
+#/
+#rate(http_server_request_duration_seconds_count{method="GET",route="/",status_code="200"}[5m]) or vector(0))

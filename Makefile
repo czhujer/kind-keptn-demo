@@ -142,21 +142,23 @@ keptn-create-project-podtato-head:
 	keptn trigger delivery --project=podtato-head --service=helloservice \
 		--image ghcr.io/podtato-head/podtatoserver:v0.1.1 \
 		--values "replicaCount=2" \
-		--values "serviceMonitor.enabled=true"
+		--values "serviceMonitor.enabled=true" \
+		--values "serviceMonitor.interval=5s" --values "serviceMonitor.scrapeTimeout=5s"
 	#
 	# keptn trigger evaluation --project=podtato-head --service=helloservice --stage=dev --timeframe=5m
-
 
 .PHONY: keptn-deploy-correct-version-podtato-head
 keptn-deploy-correct-version-podtato-head:
 	keptn trigger delivery --project=podtato-head --service=helloservice \
 			--image ghcr.io/podtato-head/podtatoserver:v0.1.1 \
 			--values "replicaCount=2" \
-			--values "serviceMonitor.enabled=true"
+			--values "serviceMonitor.enabled=true" \
+			--values "serviceMonitor.interval=5s" --values "serviceMonitor.scrapeTimeout=5s"
 
 .PHONY: keptn-deploy-slow-version-podtato-head
 keptn-deploy-slow-version-podtato-head:
-	keptn trigger delivery --project="podtato-head" --service=helloservice --image="ghcr.io/podtato-head/podtatoserver" --tag=v0.1.2
+	keptn trigger delivery --project=podtato-head --service=helloservice \
+			--image="ghcr.io/podtato-head/podtatoserver" --tag=v0.1.2
 
 .PHONY: prepare-helm-charts
 prepare-helm-charts:

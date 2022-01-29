@@ -9,3 +9,5 @@ prometheus:
     podMonitorSelectorNilUsesHelmValues: false
     serviceMonitorSelectorNilUsesHelmValues: false
     ruleSelectorNilUsesHelmValues: false
+#    scrapeInterval: 5s
+#    scrapeTimeout: 5s
