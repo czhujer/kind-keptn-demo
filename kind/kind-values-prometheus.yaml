@@ -16,6 +16,7 @@ grafana:
   sidecar:
     dashboards:
       searchNamespace: ALL
+    enableUniqueFilenames: true
 prometheus:
   enabled: true
   ingress:

@@ -191,6 +191,12 @@ keptn-deploy-slow-version-podtato-head:
 prepare-helm-charts:
 	helm package ./helm/helloserver/ -d helm && mv helm/helloserver-`cat helm/helloserver/Chart.yaml |yq eval '.version' - |tr -d '\n'`.tgz helm/helloservice.tgz
 
+.PHONY: keptn-redeploy-chart-podtato-head
+keptn-redeploy-chart-podtato-head:
+	make prepare-helm-charts && \
+	keptn add-resource --project=podtato-head --service=helloservice --all-stages --resource=./helm/helloservice.tgz && \
+	make keptn-deploy-correct-version-podtato-head
+
 .PHONY: keptn-delete-project-podtato-head
 keptn-delete-project-podtato-head:
 	keptn delete project podtato-head
