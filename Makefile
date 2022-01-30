@@ -3,23 +3,36 @@ export CLUSTER_NAME?=keptn
 #export CILIUM_VERSION?=1.10.6
 export CILIUM_VERSION?=1.11.1
 export KEPTN_VERSION?=0.12.0
+export TRIVY_IMAGE_CHECK=1
+
+# kind image list
+# image: kindest/node:v1.20.2@sha256:15d3b5c4f521a84896ed1ead1b14e4774d02202d5c65ab68f30eeaf310a3b1a7
+# image: kindest/node:v1.21.2@sha256:9d07ff05e4afefbba983fac311807b3c17a5f36e7061f6cb7e2ba756255b2be4
+# image: kindest/node:v1.22.4@sha256:ca3587e6e545a96c07bf82e2c46503d9ef86fc704f44c17577fca7bcabf5f978
+# image: kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a
+export KIND_NODE_IMAGE="kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a"
 
 .PHONY: kind-all
-#kind-all: kind-create kx-kind cilium-load-images cilium-install deploy-prometheus-stack nginx-ingress-install keptn-load-images keptn-deploy deploy-cert-manager
-kind-all: kind-create kx-kind cilium-load-images cilium-install deploy-prometheus-stack nginx-ingress-install keptn-load-images  # keptn-deploy
+#kind-all: kind-create kx-kind cilium-prepare-images cilium-install deploy-prometheus-stack nginx-ingress-install keptn-prepare-images keptn-deploy deploy-cert-manager
+kind-all: kind-create kx-kind cilium-prepare-images cilium-install deploy-prometheus-stack nginx-ingress-install keptn-prepare-images  # keptn-deploy
 
 .PHONY: kind-create
 kind-create:
+ifeq ($(TRIVY_IMAGE_CHECK), 1)
+	trivy image --severity=HIGH --exit-code=0 "$(KIND_NODE_IMAGE)"
+endif
 	kind --version
-	kind create cluster --name $(CLUSTER_NAME) --config="kind/kind-config.yaml"
-	# for testing PSP
-	#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/privileged-psp.yaml
-	#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/baseline-psp.yaml
-	#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/restricted-psp.yaml
-	#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/kind/psp/cluster-roles.yaml
-	#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/kind/psp/role-bindings.yaml
-	# for more control planes, but no workers
-	# kubectl taint nodes --all node-role.kubernetes.io/master- || true
+	kind create cluster --name "$(CLUSTER_NAME)" \
+ 		--config="kind/kind-config.yaml" \
+ 		--image="$(KIND_NODE_IMAGE)"
+# for testing PSP
+#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/privileged-psp.yaml
+#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/baseline-psp.yaml
+#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/restricted-psp.yaml
+#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/kind/psp/cluster-roles.yaml
+#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/kind/psp/role-bindings.yaml
+# for more control planes, but no workers
+# kubectl taint nodes --all node-role.kubernetes.io/master- || true
 
 .PHONY: kind-delete
 kind-delete:
@@ -29,13 +42,19 @@ kind-delete:
 kx-kind:
 	kind export kubeconfig --name $(CLUSTER_NAME)
 
-.PHONY: cilium-load-images
-cilium-load-images:
+.PHONY: cilium-prepare-images
+cilium-prepare-images:
 	# pull image locally
 	docker pull quay.io/cilium/cilium:v$(CILIUM_VERSION)
 	docker pull quay.io/cilium/hubble-ui:v0.8.5
 	docker pull quay.io/cilium/hubble-ui-backend:v0.8.5
 	docker pull quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
+ifeq ($(TRIVY_IMAGE_CHECK), 1)
+	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/cilium:v$(CILIUM_VERSION)
+	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/hubble-ui:v0.8.5
+	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/hubble-ui-backend:v0.8.5
+	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
+endif
 	# Load the image onto the cluster
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/cilium:v$(CILIUM_VERSION)
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/hubble-ui:v0.8.5
@@ -65,8 +84,8 @@ cilium-install:
 	   --set prometheus.enabled=true \
 	   --set operator.prometheus.enabled=true
 
-.PHONY: keptn-load-images
-keptn-load-images:
+.PHONY: keptn-prepare-images
+keptn-prepare-images:
 	# pull image locally
 	docker pull docker.io/bitnami/mongodb:4.4.9-debian-10-r0
 	docker pull docker.io/keptn/distributor:$(KEPTN_VERSION)
@@ -76,7 +95,16 @@ keptn-load-images:
 	docker pull docker.io/keptn/shipyard-controller:$(KEPTN_VERSION)
 	docker pull docker.io/keptn/jmeter-service:0.8.4
 	docker pull keptncontrib/prometheus-service:0.7.2
-
+ifeq ($(TRIVY_IMAGE_CHECK), 1)
+	trivy image --severity=HIGH --exit-code=0 docker.io/bitnami/mongodb:4.4.9-debian-10-r0
+	trivy image --severity=HIGH --exit-code=1 docker.io/keptn/distributor:$(KEPTN_VERSION)
+	trivy image --severity=HIGH --exit-code=0 docker.io/keptn/mongodb-datastore:$(KEPTN_VERSION)
+	trivy image --severity=HIGH --exit-code=0 nats:2.1.9-alpine3.12
+	trivy image --severity=HIGH --exit-code=1 synadia/prometheus-nats-exporter:0.5.0
+	trivy image --severity=HIGH --exit-code=1 docker.io/keptn/shipyard-controller:$(KEPTN_VERSION)
+	trivy image --severity=HIGH --exit-code=0 docker.io/keptn/jmeter-service:0.8.4
+	trivy image --severity=HIGH --exit-code=0 keptncontrib/prometheus-service:0.7.2
+endif
 	# Load the image onto the cluster
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/bitnami/mongodb:4.4.9-debian-10-r0
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:$(KEPTN_VERSION)
@@ -87,7 +115,6 @@ keptn-load-images:
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/jmeter-service:0.8.4
 	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/prometheus-service:0.7.2
 
-KIND_IP := $(shell docker container inspect $(CLUSTER_NAME)-control-plane --format '{{ .NetworkSettings.Networks.kind.IPAddress }}')
 .PHONY: keptn-deploy
 keptn-deploy:
 	helm repo add keptn https://charts.keptn.sh
@@ -196,15 +223,6 @@ deploy-prometheus-stack:
 	prometheus-community/kube-prometheus-stack \
 	--namespace monitoring \
     --create-namespace \
-    --set kubeStateMetrics.enabled=false \
-    --set nodeExporter.enabled=false \
-    --set alertmanager.enabled=false,kubeApiServer.enabled=false \
-    --set kubelet.enabled=false,kubeProxy.enabled=false \
-    --set kubeControllerManager.enabled=false,coreDns.enabled=false \
-    --set kubeScheduler.enabled=false,kubeEtcd.enabled=false \
-    --set grafana.enabled=false \
-    --set prometheusOperator.admissionWebhooks.enabled=false \
-    --set prometheusOperator.tls.enabled=false \
     -f kind/kind-values-prometheus.yaml
 
 #.PHONY: k8s-apply

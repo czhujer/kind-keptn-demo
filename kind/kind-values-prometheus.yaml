@@ -1,4 +1,16 @@
 ---
+#prometheusOperator:
+#  admissionWebhooks:
+#    enabled: false
+#  tls:
+#    enabled: false
+grafana:
+  enabled: true
+  adminPassword: admin
+  ingress:
+    enabled: true
+    hosts:
+      - grafana.127.0.0.1.nip.io
 prometheus:
   enabled: true
   ingress:
@@ -11,3 +23,24 @@ prometheus:
     ruleSelectorNilUsesHelmValues: false
 #    scrapeInterval: 5s
 #    scrapeTimeout: 5s
+#
+kubeStateMetrics:
+  enabled: false
+nodeExporter:
+  enabled: false
+alertmanager:
+  enabled: false
+kubeApiServer:
+  enabled: false
+kubelet:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+coreDns:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeEtcd:
+  enabled: false
