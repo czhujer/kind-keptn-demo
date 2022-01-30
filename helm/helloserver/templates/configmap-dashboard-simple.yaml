@@ -5,7 +5,7 @@ metadata:
   labels:
     grafana_dashboard: "1"
 data:
-  k8s-dashboard.json: |-
+  {{ .Release.Namespace }}-helloserver-simple-dashboard.json: |-
     {
       "annotations": {
         "list": [
@@ -216,7 +216,6 @@ data:
       "timepicker": {},
       "timezone": "",
       "title": "{{ .Release.Namespace }} / helloserver-grafana-dashboard-simple",
-      "uid": "3TF6A8b7k",
       "version": 2,
       "weekStart": ""
     }

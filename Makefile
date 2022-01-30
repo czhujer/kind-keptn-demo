@@ -189,7 +189,7 @@ keptn-deploy-slow-version-podtato-head:
 
 .PHONY: prepare-helm-charts
 prepare-helm-charts:
-	helm package ./helm/helloserver/ -d helm && mv helm/helloserver-0.3.1.tgz helm/helloservice.tgz
+	helm package ./helm/helloserver/ -d helm && mv helm/helloserver-`cat helm/helloserver/Chart.yaml |yq eval '.version' - |tr -d '\n'`.tgz helm/helloservice.tgz
 
 .PHONY: keptn-delete-project-podtato-head
 keptn-delete-project-podtato-head:
