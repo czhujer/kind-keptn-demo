@@ -6,11 +6,16 @@
 #    enabled: false
 grafana:
   enabled: true
+  serviceMonitor:
+    enable: true
   adminPassword: admin
   ingress:
     enabled: true
     hosts:
       - grafana.127.0.0.1.nip.io
+  sidecar:
+    dashboards:
+      searchNamespace: ALL
 prometheus:
   enabled: true
   ingress:
