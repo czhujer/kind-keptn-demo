@@ -145,6 +145,18 @@ keptn-deploy:
 				  -f keptn/crd-istio-virtualservices.yaml
 	# https://raw.githubusercontent.com/keptn-sandbox/keptn-in-a-box/master/resources/istio/public-gateway.yaml
 
+.PHONY: argocd-deploy
+argocd-deploy:
+	helm repo add argo https://argoproj.github.io/argo-helm
+	helm upgrade --install \
+		argocd-single \
+		argo/argo-cd \
+		--namespace argocd \
+		--create-namespace \
+		-f kind/kind-values-argocd.yaml \
+		--wait
+	kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
+
 .PHONY: keptn-set-login
 keptn-set-login:
 	kubectl create secret -n keptn generic bridge-credentials --from-literal="BASIC_AUTH_USERNAME=admin" --from-literal="BASIC_AUTH_PASSWORD=admin" -oyaml --dry-run=client | kubectl replace -f -
