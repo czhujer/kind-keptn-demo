@@ -12,9 +12,12 @@ export TRIVY_IMAGE_CHECK=1
 # image: kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a
 export KIND_NODE_IMAGE="kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a"
 
-.PHONY: kind-all
-#kind-all: kind-create kx-kind cilium-prepare-images cilium-install deploy-prometheus-stack nginx-ingress-install keptn-prepare-images keptn-deploy deploy-cert-manager
-kind-all: kind-create kx-kind cilium-prepare-images cilium-install deploy-prometheus-stack nginx-ingress-install keptn-prepare-images  # keptn-deploy
+.PHONY: kind-all-by-helm
+#kind-all: kind-create kx-kind cilium-prepare-images cilium-install prometheus-stack-deploy-manual nginx-ingress-install keptn-prepare-images keptn-deploy-manual deploy-cert-manager
+kind-all-by-helm: kind-create kx-kind cilium-prepare-images cilium-install prometheus-stack-deploy-manual nginx-ingress-deploy-manual keptn-prepare-images keptn-deploy-manual
+
+.PHONY: kind-basic
+kind-basic: kind-create kx-kind cilium-prepare-images cilium-install argocd-deploy
 
 .PHONY: kind-create
 kind-create:
@@ -84,6 +87,18 @@ cilium-install:
 	   --set prometheus.enabled=true \
 	   --set operator.prometheus.enabled=true
 
+.PHONY: argocd-deploy
+argocd-deploy:
+	helm repo add argo https://argoproj.github.io/argo-helm
+	helm upgrade --install \
+		argocd-single \
+		argo/argo-cd \
+		--namespace argocd \
+		--create-namespace \
+		-f kind/kind-values-argocd.yaml \
+		--wait
+	kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
+
 .PHONY: keptn-prepare-images
 keptn-prepare-images:
 	# pull image locally
@@ -115,8 +130,8 @@ endif
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/jmeter-service:0.8.4
 	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/prometheus-service:0.7.2
 
-.PHONY: keptn-deploy
-keptn-deploy:
+.PHONY: keptn-deploy-manual
+keptn-deploy-manual:
 	helm repo add keptn https://charts.keptn.sh
 	helm upgrade --install \
 		keptn keptn/keptn \
@@ -137,6 +152,10 @@ keptn-deploy:
 		  prometheus-service \
 		  https://github.com/keptn-contrib/prometheus-service/releases/download/0.7.2/prometheus-service-0.7.2.tgz \
 		  --set=prometheus.endpoint="http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090"
+	helm upgrade --install \
+			-n keptn \
+			argo-service \
+			https://github.com/keptn-contrib/argo-service/releases/download/0.9.1/argo-service-0.9.1.tgz
 	#
 	kubectl apply -n monitoring \
  		-f https://raw.githubusercontent.com/keptn-contrib/prometheus-service/0.7.2/deploy/role.yaml
@@ -144,18 +163,6 @@ keptn-deploy:
 	kubectl apply -f keptn/crd-istio-destinationrules.yaml \
 				  -f keptn/crd-istio-virtualservices.yaml
 	# https://raw.githubusercontent.com/keptn-sandbox/keptn-in-a-box/master/resources/istio/public-gateway.yaml
-
-.PHONY: argocd-deploy
-argocd-deploy:
-	helm repo add argo https://argoproj.github.io/argo-helm
-	helm upgrade --install \
-		argocd-single \
-		argo/argo-cd \
-		--namespace argocd \
-		--create-namespace \
-		-f kind/kind-values-argocd.yaml \
-		--wait
-	kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
 
 .PHONY: keptn-set-login
 keptn-set-login:
@@ -216,8 +223,8 @@ keptn-delete-project-podtato-head:
 	kubectl delete ns podtato-head-prod || true
 	# keptn delete service helloservice -p podtato-head
 
-.PHONY: nginx-ingress-install
-nginx-ingress-install:
+.PHONY: nginx-ingress-deploy-manual
+nginx-ingress-deploy-manual:
 	docker pull k8s.gcr.io/ingress-nginx/controller:v1.1.1
 	kind load docker-image --name $(CLUSTER_NAME) k8s.gcr.io/ingress-nginx/controller:v1.1.1
 	helm repo add --force-update ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -233,8 +240,8 @@ nginx-ingress-install:
 #deploy-cert-manager:
 #	kind/cert-manager_install.sh
 
-.PHONY: deploy-prometheus-stack
-deploy-prometheus-stack:
+.PHONY: prometheus-stack-deploy-manual
+prometheus-stack-deploy-manual:
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm upgrade --install \
 	prometheus-stack \
