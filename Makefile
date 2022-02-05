@@ -12,12 +12,15 @@ export TRIVY_IMAGE_CHECK=1
 # image: kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a
 export KIND_NODE_IMAGE="kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a"
 
-.PHONY: kind-all-by-helm
+.PHONY: kind-all-manual
 #kind-all-by-helm: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install prometheus-stack-deploy-manual nginx-ingress-install keptn-prepare-images keptn-deploy-manual deploy-cert-manager
-kind-all-by-helm: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install prometheus-stack-deploy-manual nginx-ingress-deploy-manual keptn-prepare-images keptn-deploy-manual
+kind-all-manual: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install prometheus-stack-deploy-manual nginx-ingress-deploy-manual keptn-prepare-images keptn-deploy-manual
 
 .PHONY: kind-basic
 kind-basic: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install argocd-deploy keptn-prepare-images
+
+.PHONY: kind-all-by-argocd
+kind-all-by-argocd: kind-basic argo-system-apps
 
 .PHONY: kind-create
 kind-create:
@@ -94,9 +97,10 @@ argocd-deploy:
 		--wait
 	# kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
 
-.PHONY: argo-apps
-argo-apps:
+.PHONY: argo-system-apps
+argo-system-apps:
 	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
+	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
 
 .PHONY: keptn-prepare-images
 keptn-prepare-images:

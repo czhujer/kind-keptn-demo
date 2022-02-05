@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-ingress
+  namespace: argocd
+spec:
+  destination:
+    namespace: ingress-nginx
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: default
+  source:
+    chart: ingress-nginx
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 4.0.16
+    helm:
+      values: |
+        controller:
+          ingressClassResource:
+            default: true
+          watchIngressWithoutClass: true
+          service:
+            external:
+              enabled: false
+          extraArgs:
+            publish-status-address: localhost
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+          hostPort:
+            enabled: true
