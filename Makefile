@@ -94,6 +94,10 @@ argocd-deploy:
 		--wait
 	# kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
 
+.PHONY: argo-apps
+argo-apps:
+	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
+
 .PHONY: keptn-prepare-images
 keptn-prepare-images:
 	# pull image locally
