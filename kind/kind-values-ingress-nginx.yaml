@@ -10,7 +10,7 @@ controller:
     publish-status-address: localhost
   metrics:
     enabled: true
-#    serviceMonitor:
-#      enabled: true
+    serviceMonitor:
+      enabled: true
   hostPort:
     enabled: true

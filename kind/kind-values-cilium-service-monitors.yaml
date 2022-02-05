@@ -1,8 +1,8 @@
 ---
-#prometheus:
-#  serviceMonitor:
-#    enabled: true
-#operator:
-#  prometheus:
-#    serviceMonitor:
-#      enabled: true
+prometheus:
+  serviceMonitor:
+    enabled: true
+operator:
+  prometheus:
+    serviceMonitor:
+      enabled: true

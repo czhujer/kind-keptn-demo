@@ -4,19 +4,17 @@ dex:
 controller:
   metrics:
     enabled: true
-    serviceMonitor:
-      enabled: true
+
 repoServer:
   metrics:
-    serviceMonitor:
-      enabled: true
+    enabled: true
+
 server:
   metrics:
     enabled: true
-    serviceMonitor:
-      enabled: true
   extraArgs:
-    - "--insecure"
+    - --insecure
+    - --disable-auth
   ingress:
     enabled: true
     hosts:
@@ -25,5 +23,4 @@ server:
 redis:
   metrics:
     enabled: true
-    serviceMonitor:
-      enabled: true
+

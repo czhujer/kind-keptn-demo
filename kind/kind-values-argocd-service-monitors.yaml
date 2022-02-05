@@ -1,0 +1,20 @@
+---
+controller:
+  metrics:
+    serviceMonitor:
+      enabled:  true
+
+repoServer:
+  metrics:
+    serviceMonitor:
+      enabled: true
+
+server:
+  metrics:
+    serviceMonitor:
+      enabled: true
+
+redis:
+  metrics:
+    serviceMonitor:
+      enabled: true

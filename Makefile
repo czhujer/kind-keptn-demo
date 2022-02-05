@@ -13,11 +13,11 @@ export TRIVY_IMAGE_CHECK=1
 export KIND_NODE_IMAGE="kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a"
 
 .PHONY: kind-all-by-helm
-#kind-all: kind-create kx-kind cilium-prepare-images cilium-install prometheus-stack-deploy-manual nginx-ingress-install keptn-prepare-images keptn-deploy-manual deploy-cert-manager
-kind-all-by-helm: kind-create kx-kind cilium-prepare-images cilium-install prometheus-stack-deploy-manual nginx-ingress-deploy-manual keptn-prepare-images keptn-deploy-manual
+#kind-all-by-helm: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install prometheus-stack-deploy-manual nginx-ingress-install keptn-prepare-images keptn-deploy-manual deploy-cert-manager
+kind-all-by-helm: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install prometheus-stack-deploy-manual nginx-ingress-deploy-manual keptn-prepare-images keptn-deploy-manual
 
 .PHONY: kind-basic
-kind-basic: kind-create kx-kind cilium-prepare-images cilium-install argocd-deploy
+kind-basic: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install argocd-deploy keptn-prepare-images
 
 .PHONY: kind-create
 kind-create:
@@ -45,6 +45,11 @@ kind-delete:
 kx-kind:
 	kind export kubeconfig --name $(CLUSTER_NAME)
 
+.PHONY: kind-install-crds
+kind-install-crds:
+	# fix prometheus-operator's CRDs
+	kubectl apply -f https://raw.githubusercontent.com/prometheus-community/helm-charts/main/charts/kube-prometheus-stack/crds/crd-servicemonitors.yaml
+
 .PHONY: cilium-prepare-images
 cilium-prepare-images:
 	# pull image locally
@@ -70,22 +75,11 @@ cilium-install:
 	helm repo add cilium https://helm.cilium.io/
 	# install/upgrade the chart
 	helm upgrade --install cilium cilium/cilium --version $(CILIUM_VERSION) \
+	   -f kind/kind-values-cilium.yaml \
 	   -f kind/kind-values-cilium-hubble.yaml \
 	   -f kind/kind-values-cilium-service-monitors.yaml \
-   	   --wait \
 	   --namespace kube-system \
-	   --set operator.replicas=1 \
-	   --set nodeinit.enabled=true \
-	   --set kubeProxyReplacement=partial \
-	   --set hostServices.enabled=false \
-	   --set externalIPs.enabled=true \
-	   --set nodePort.enabled=true \
-	   --set hostPort.enabled=true \
-	   --set bpf.masquerade=false \
-	   --set image.pullPolicy=IfNotPresent \
-	   --set ipam.mode=kubernetes \
-	   --set prometheus.enabled=true \
-	   --set operator.prometheus.enabled=true
+	   --wait
 
 .PHONY: argocd-deploy
 argocd-deploy:
@@ -96,8 +90,9 @@ argocd-deploy:
 		--namespace argocd \
 		--create-namespace \
 		-f kind/kind-values-argocd.yaml \
+		-f kind/kind-values-argocd-service-monitors.yaml \
 		--wait
-	kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
+	# kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
 
 .PHONY: keptn-prepare-images
 keptn-prepare-images:
