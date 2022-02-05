@@ -1,0 +1,68 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-stack
+  namespace: argocd
+spec:
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: default
+  source:
+    chart: kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 31.0.0
+    helm:
+      values: |
+        grafana:
+          enabled: true
+          serviceMonitor:
+            enable: true
+          adminPassword: admin
+          ingress:
+            enabled: true
+            hosts:
+              - grafana.127.0.0.1.nip.io
+          sidecar:
+            dashboards:
+              searchNamespace: ALL
+            enableUniqueFilenames: true
+        prometheus:
+          enabled: true
+          ingress:
+            enabled: yes
+            hosts:
+              - prometheus.127.0.0.1.nip.io
+          prometheusSpec:
+            podMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorSelectorNilUsesHelmValues: false
+            ruleSelectorNilUsesHelmValues: false
+        #    scrapeInterval: 5s
+        #    scrapeTimeout: 5s
+        #
+        kubeStateMetrics:
+          enabled: false
+        nodeExporter:
+          enabled: false
+        alertmanager:
+          enabled: false
+        kubeApiServer:
+          enabled: false
+        kubelet:
+          enabled: false
+        kubeProxy:
+          enabled: false
+        kubeControllerManager:
+          enabled: false
+        coreDns:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeEtcd:
+          enabled: false
