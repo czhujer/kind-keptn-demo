@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-stack-crds
+  namespace: argocd
+spec:
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: default
+  source:
+    repoURL: https://github.com/prometheus-community/helm-charts.git
+    targetRevision: kube-prometheus-stack-31.0.0
+    path: charts/kube-prometheus-stack/crds
