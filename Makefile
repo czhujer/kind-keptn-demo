@@ -103,8 +103,9 @@ argocd-deploy:
 
 .PHONY: argo-system-apps
 argo-system-apps:
-	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
+	kubectl -n argocd apply -f argocd/argo-cd-crds.yaml
 	kubectl -n argocd apply -f argocd/prometheus-stack-crds.yaml
+	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
 	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
 
 .PHONY: keptn-prepare-images
