@@ -52,6 +52,10 @@ kx-kind:
 kind-install-crds:
 	# fix prometheus-operator's CRDs
 	kubectl apply -f https://raw.githubusercontent.com/prometheus-community/helm-charts/main/charts/kube-prometheus-stack/crds/crd-servicemonitors.yaml
+	# for keptn
+	kubectl apply -f keptn/crd-istio-destinationrules.yaml \
+				  -f keptn/crd-istio-virtualservices.yaml
+	# https://raw.githubusercontent.com/keptn-sandbox/keptn-in-a-box/master/resources/istio/public-gateway.yaml
 
 .PHONY: cilium-prepare-images
 cilium-prepare-images:
@@ -100,6 +104,7 @@ argocd-deploy:
 .PHONY: argo-system-apps
 argo-system-apps:
 	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
+	kubectl -n argocd apply -f argocd/prometheus-stack-crds.yaml
 	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
 
 .PHONY: keptn-prepare-images
@@ -162,10 +167,6 @@ keptn-deploy-manual:
 	#
 	kubectl apply -n monitoring \
  		-f https://raw.githubusercontent.com/keptn-contrib/prometheus-service/0.7.2/deploy/role.yaml
-	#
-	kubectl apply -f keptn/crd-istio-destinationrules.yaml \
-				  -f keptn/crd-istio-virtualservices.yaml
-	# https://raw.githubusercontent.com/keptn-sandbox/keptn-in-a-box/master/resources/istio/public-gateway.yaml
 
 .PHONY: keptn-set-login
 keptn-set-login:
