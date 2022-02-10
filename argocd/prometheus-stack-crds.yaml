@@ -14,7 +14,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - Replace=true
-  project: default
+  project: system-monitoring
   source:
     repoURL: https://github.com/prometheus-community/helm-charts.git
     targetRevision: kube-prometheus-stack-31.0.0
