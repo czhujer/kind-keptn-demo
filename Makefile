@@ -8,7 +8,7 @@ export TRIVY_IMAGE_CHECK=1
 # kind image list
 # image: kindest/node:v1.20.2@sha256:15d3b5c4f521a84896ed1ead1b14e4774d02202d5c65ab68f30eeaf310a3b1a7
 # image: kindest/node:v1.21.2@sha256:9d07ff05e4afefbba983fac311807b3c17a5f36e7061f6cb7e2ba756255b2be4
-# image: kindest/node:v1.22.4@sha256:ca3587e6e545a96c07bf82e2c46503d9ef86fc704f44c17577fca7bcabf5f978
+# image: kindest/node:v1.22.5@sha256:d409e1b1b04d3290195e0263e12606e1b83d5289e1f80e54914f60cd1237499d
 # image: kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a
 export KIND_NODE_IMAGE="kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a"
 
@@ -103,10 +103,13 @@ argocd-deploy:
 
 .PHONY: argo-system-apps
 argo-system-apps:
+	kubectl -n argocd apply -f argocd/projects/system-monitoring.yaml
 	kubectl -n argocd apply -f argocd/argo-cd-crds.yaml
 	kubectl -n argocd apply -f argocd/prometheus-stack-crds.yaml
 	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
+	kubectl -n argocd apply -f argocd/prometheus-adapter.yaml
 	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
+	kubectl -n argocd apply -f argocd/gateway-api-crds.yaml
 
 .PHONY: keptn-prepare-images
 keptn-prepare-images:
