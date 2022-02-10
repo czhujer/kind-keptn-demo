@@ -31,15 +31,15 @@ prometheus:
 #    scrapeTimeout: 5s
 #
 kubeStateMetrics:
-  enabled: false
+  enabled: true
 nodeExporter:
-  enabled: false
+  enabled: true
 alertmanager:
   enabled: false
 kubeApiServer:
   enabled: false
 kubelet:
-  enabled: false
+  enabled: true
 kubeProxy:
   enabled: false
 kubeControllerManager:
