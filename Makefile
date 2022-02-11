@@ -106,10 +106,12 @@ argo-system-apps:
 	kubectl -n argocd apply -f argocd/projects/system-monitoring.yaml
 	kubectl -n argocd apply -f argocd/argo-cd-crds.yaml
 	kubectl -n argocd apply -f argocd/prometheus-stack-crds.yaml
+	sleep 10
 	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
 	kubectl -n argocd apply -f argocd/prometheus-adapter.yaml
 	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
 	kubectl -n argocd apply -f argocd/gateway-api-crds.yaml
+	kubectl -n argocd apply -f argocd/argo-rollouts.yaml
 
 .PHONY: keptn-prepare-images
 keptn-prepare-images:

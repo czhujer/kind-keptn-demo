@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-rollouts
+  namespace: argocd
+spec:
+  destination:
+    namespace: argo-rollouts
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: default
+  source:
+    chart: argo-rollouts
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 2.9.3
+    helm:
+      values: |
+        controller:
+          image:
+            tag: v1.2.0-rc1
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+        dashboard:
+          image:
+            tag: v1.2.0-rc1
+          enabled: true
+          ingress:
+            enabled: true
+            hosts:
+             - argo-rollouts.127.0.0.1.nip.io
+        
