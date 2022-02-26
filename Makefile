@@ -2,6 +2,7 @@
 export CLUSTER_NAME?=keptn
 export CILIUM_VERSION?=1.11.2
 export CERT_MANAGER_CHART_VERSION=1.7.1
+export ARGOCD_CHART_VERSION=argo-cd-3.33.7
 export KEPTN_VERSION?=0.12.0
 export TRIVY_IMAGE_CHECK=1
 
@@ -19,8 +20,8 @@ kind-basic: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-i
 .PHONY: kind-keptn
 kind-keptn: kind-basic prometheus-stack-deploy keptn-prepare-images keptn-deploy
 
-.PHONY: kind-w-spo
-kind-w-spo: kind-basic cert-manager-deploy spo-deploy
+.PHONY: kind-spo
+kind-spo: kind-basic cert-manager-deploy spo-deploy
 
 .PHONY: kind-create
 kind-create:
@@ -93,24 +94,45 @@ cilium-install:
 
 .PHONY: cert-manager-deploy
 cert-manager-deploy:
+	# prepare image(s)
+	docker pull quay.io/jetstack/cert-manager-controller:v1.7.1
+	docker pull quay.io/jetstack/cert-manager-webhook:v1.7.1
+	docker pull quay.io/jetstack/cert-manager-cainjector:v1.7.1
+	docker pull quay.io/jetstack/cert-manager-ctl:v1.7.1
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-controller:v1.7.1
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-webhook:v1.7.1
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-cainjector:v1.7.1
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-ctl:v1.7.1
+	#
 	helm repo add cert-manager https://charts.jetstack.io
 	helm upgrade --install \
-		cert-manager cert-manager/cert-manager --version "${CERT_MANAGER_CHART_VERSION}" \
+		cert-manager cert-manager/cert-manager \
+		--version "${CERT_MANAGER_CHART_VERSION}" \
 	   --namespace cert-manager \
 	   --create-namespace \
 	   --values kind/cert-manager.yaml
 
 .PHONY: argocd-deploy
 argocd-deploy:
+	# prepare image(s)
+	docker pull quay.io/argoproj/argocd:v2.3.0-rc5
+	docker pull redis:6.2.6-alpine
+	docker pull quay.io/bitnami/redis-exporter:1.26.0-debian-10-r2
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd:v2.3.0-rc5
+	kind load docker-image --name $(CLUSTER_NAME) redis:6.2.6-alpine
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/bitnami/redis-exporter:1.26.0-debian-10-r2
+	# install
 	helm repo add argo https://argoproj.github.io/argo-helm
 	helm upgrade --install \
 		argocd-single \
 		argo/argo-cd \
 		--namespace argocd \
 		--create-namespace \
+		--version "${ARGOCD_CHART_VERSION}" \
 		-f kind/kind-values-argocd.yaml \
 		-f kind/kind-values-argocd-service-monitors.yaml \
 		--wait
+	# update CRDs
 	kubectl -n argocd apply -f argocd/argo-cd-crds.yaml
 	# kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
 

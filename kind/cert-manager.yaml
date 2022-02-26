@@ -1,11 +1,22 @@
 ---
-#image:
+global:
+  podSecurityPolicy:
+    enabled: true
+image:
+  pullPolicy: IfNotPresent
 #  tag: v1.4.0
 installCRDs: true
 prometheus:
   enabled: true
   servicemonitor:
     enabled: true
-#webhook:
-#  image:
+webhook:
+  image:
+    pullPolicy: IfNotPresent
 #    tag: v1.4.0
+cainjector:
+  image:
+    pullPolicy: IfNotPresent
+startupapicheck:
+  image:
+    pullPolicy: IfNotPresent

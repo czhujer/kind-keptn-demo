@@ -1,9 +1,21 @@
 ---
+
 hubble:
   enabled: true
   relay:
+    image:
+      pullPolicy: IfNotPresent
     enabled: true
   ui:
+    frontend:
+      image:
+        pullPolicy: IfNotPresent
+    backend:
+      image:
+        pullPolicy: IfNotPresent
+    proxy:
+      image:
+        pullPolicy: IfNotPresent
     # enable Hubble UI
     enabled: true
     standalone:

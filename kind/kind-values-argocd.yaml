@@ -2,17 +2,15 @@
 global:
   image:
     tag: "v2.3.0-rc5"
-
+    imagePullPolicy: Never
 dex:
   enabled: false
 controller:
   metrics:
     enabled: true
-
 repoServer:
   metrics:
     enabled: true
-
 server:
   config:
     url: http://argocd.127.0.0.1.nip.io
@@ -25,8 +23,10 @@ server:
     enabled: true
     hosts:
       - argocd.127.0.0.1.nip.io
-
 redis:
   metrics:
     enabled: true
-
+    image:
+      imagePullPolicy: Never
+  image:
+    imagePullPolicy: Never

@@ -30,6 +30,9 @@ featureGates:
 
 nodes:
   - role: control-plane
+    extraMounts:
+      - hostPath: /proc
+        containerPath: /hostproc
     kubeadmConfigPatches:
       - |
         kind: InitConfiguration
