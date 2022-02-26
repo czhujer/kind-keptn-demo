@@ -3,9 +3,10 @@ export CLUSTER_NAME?=keptn
 #export CILIUM_VERSION?=1.10.6
 export CILIUM_VERSION?=1.11.2
 export CERT_MANAGER_CHART_VERSION="1.7.1"
-
 export KEPTN_VERSION?=0.12.0
 export TRIVY_IMAGE_CHECK=1
+
+export ARGOCD_OPTS="--grpc-web --insecure --server argocd.127.0.0.1.nip.io"
 
 # kind image list
 # image: kindest/node:v1.20.2@sha256:15d3b5c4f521a84896ed1ead1b14e4774d02202d5c65ab68f30eeaf310a3b1a7
@@ -120,15 +121,23 @@ argo-system-apps:
 	# projects
 	kubectl -n argocd apply -f argocd/projects/system-monitoring.yaml
 	kubectl -n argocd apply -f argocd/projects/system-keptn.yaml
+	kubectl -n argocd apply -f argocd/projects/security-profiles-operator.yaml
+	# (update) CRDs
 	kubectl -n argocd apply -f argocd/argo-cd-crds.yaml
 	kubectl -n argocd apply -f argocd/prometheus-stack-crds.yaml
 	sleep 10
-	# monitoring
+	#
+	# apps:
+	#
+	#monitoring
 	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
 	kubectl -n argocd apply -f argocd/prometheus-adapter.yaml
 	# ingress
 	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
 	kubectl -n argocd apply -f argocd/gateway-api-crds.yaml
+	# security profiles operator
+	kubectl -n argocd apply -f argocd/security-profiles-operator.yaml
+	# argo rollouts and keptn
 	kubectl -n argocd apply -f argocd/argo-rollouts.yaml
 	kubectl -n argocd apply -f argocd/keptn.yaml
 

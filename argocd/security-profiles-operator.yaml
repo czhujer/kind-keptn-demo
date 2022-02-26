@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: security-profiles-operator
+  namespace: argocd
+spec:
+  destination:
+    namespace: security-profiles-operator
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+#    syncOptions:
+#      - CreateNamespace=true
+#      - Replace=true
+  project: security-profiles-operator
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      name: spo-mutating-webhook-configuration
+      jqPathExpressions:
+        - '.webhooks[]?.clientConfig.caBundle'
+  source:
+    repoURL: https://github.com/kubernetes-sigs/security-profiles-operator.git
+    targetRevision: v0.4.1
+    path: deploy
+    directory:
+      # exclude: '*'
+      include: 'operator.yaml'
