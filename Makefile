@@ -1,29 +1,26 @@
 # Set environment variables
 export CLUSTER_NAME?=keptn
-#export CILIUM_VERSION?=1.10.6
 export CILIUM_VERSION?=1.11.2
-export CERT_MANAGER_CHART_VERSION="1.7.1"
+export CERT_MANAGER_CHART_VERSION=1.7.1
 export KEPTN_VERSION?=0.12.0
 export TRIVY_IMAGE_CHECK=1
 
 export ARGOCD_OPTS="--grpc-web --insecure --server argocd.127.0.0.1.nip.io"
 
 # kind image list
-# image: kindest/node:v1.20.2@sha256:15d3b5c4f521a84896ed1ead1b14e4774d02202d5c65ab68f30eeaf310a3b1a7
 # image: kindest/node:v1.21.2@sha256:9d07ff05e4afefbba983fac311807b3c17a5f36e7061f6cb7e2ba756255b2be4
 # image: kindest/node:v1.22.5@sha256:d409e1b1b04d3290195e0263e12606e1b83d5289e1f80e54914f60cd1237499d
 # image: kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a
 export KIND_NODE_IMAGE="kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a"
 
-.PHONY: kind-all-manual
-#kind-all-by-helm: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install prometheus-stack-deploy-manual nginx-ingress-install keptn-prepare-images keptn-deploy-manual deploy-cert-manager
-kind-all-manual: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install prometheus-stack-deploy-manual nginx-ingress-deploy-manual keptn-prepare-images keptn-deploy-manual
-
 .PHONY: kind-basic
-kind-basic: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install argocd-deploy keptn-prepare-images
+kind-basic: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install argocd-deploy nginx-ingress-deploy
 
-.PHONY: kind-all-by-argocd
-kind-all-by-argocd: kind-basic argo-system-apps
+.PHONY: kind-keptn
+kind-keptn: kind-basic prometheus-stack-deploy keptn-prepare-images keptn-deploy
+
+.PHONY: kind-w-spo
+kind-w-spo: kind-basic cert-manager-deploy spo-deploy
 
 .PHONY: kind-create
 kind-create:
@@ -114,32 +111,48 @@ argocd-deploy:
 		-f kind/kind-values-argocd.yaml \
 		-f kind/kind-values-argocd-service-monitors.yaml \
 		--wait
+	kubectl -n argocd apply -f argocd/argo-cd-crds.yaml
 	# kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
 
-.PHONY: argo-system-apps
-argo-system-apps:
-	# projects
-	kubectl -n argocd apply -f argocd/projects/system-monitoring.yaml
-	kubectl -n argocd apply -f argocd/projects/system-keptn.yaml
+.PHONY: spo-deploy
+spo-deploy:
 	kubectl -n argocd apply -f argocd/projects/security-profiles-operator.yaml
-	# (update) CRDs
-	kubectl -n argocd apply -f argocd/argo-cd-crds.yaml
-	kubectl -n argocd apply -f argocd/prometheus-stack-crds.yaml
-	sleep 10
-	#
-	# apps:
-	#
-	#monitoring
-	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
-	kubectl -n argocd apply -f argocd/prometheus-adapter.yaml
+	kubectl -n argocd apply -f argocd/security-profiles-operator.yaml
+
+.PHONY: nginx-ingress-deploy
+nginx-ingress-deploy:
+	docker pull k8s.gcr.io/ingress-nginx/controller:v1.1.1
+	kind load docker-image --name $(CLUSTER_NAME) k8s.gcr.io/ingress-nginx/controller:v1.1.1
 	# ingress
 	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
 	kubectl -n argocd apply -f argocd/gateway-api-crds.yaml
-	# security profiles operator
-	kubectl -n argocd apply -f argocd/security-profiles-operator.yaml
-	# argo rollouts and keptn
-	kubectl -n argocd apply -f argocd/argo-rollouts.yaml
-	kubectl -n argocd apply -f argocd/keptn.yaml
+#	helm repo add --force-update ingress-nginx https://kubernetes.github.io/ingress-nginx
+#	helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+#	  --namespace ingress-nginx \
+#	  --create-namespace \
+#	-f kind/kind-values-ingress-nginx.yaml
+#
+#	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
+#	kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io ingress-nginx-admission
+
+.PHONY: prometheus-stack-deploy
+prometheus-stack-deploy:
+	# projects
+	kubectl -n argocd apply -f argocd/projects/system-monitoring.yaml
+	# (update) CRDs
+	kubectl -n argocd apply -f argocd/prometheus-stack-crds.yaml
+	sleep 10
+	#monitoring
+	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
+	kubectl -n argocd apply -f argocd/prometheus-adapter.yaml
+	# old way
+#	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+#	helm upgrade --install \
+#	prometheus-stack \
+#	prometheus-community/kube-prometheus-stack \
+#	--namespace monitoring \
+#    --create-namespace \
+#    -f kind/kind-values-prometheus.yaml
 
 .PHONY: keptn-prepare-images
 keptn-prepare-images:
@@ -184,34 +197,37 @@ endif
 	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/argo-service:0.9.1
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:0.10.0
 
-.PHONY: keptn-deploy-manual
-keptn-deploy-manual:
-	helm repo add keptn https://charts.keptn.sh
-	helm upgrade --install \
-		keptn keptn/keptn \
-		-n keptn \
-		--create-namespace \
-		--wait \
-		-f kind/kind-values-keptn.yaml
-	helm upgrade --install \
-		helm-service \
-		https://github.com/keptn/keptn/releases/download/$(KEPTN_VERSION)/helm-service-$(KEPTN_VERSION).tgz \
-		-n keptn
-	helm upgrade --install \
-		jmeter-service https://github.com/keptn/keptn/releases/download/0.8.4/jmeter-service-0.8.4.tgz \
-		-n keptn
-	helm upgrade --install \
-			-n keptn \
-		  prometheus-service \
-		  https://github.com/keptn-contrib/prometheus-service/releases/download/0.7.2/prometheus-service-0.7.2.tgz \
-		  --set=prometheus.endpoint="http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090"
-	helm upgrade --install \
-			-n keptn \
-			argo-service \
-			https://github.com/keptn-contrib/argo-service/releases/download/0.9.1/argo-service-0.9.1.tgz
-	#
-	kubectl apply -n monitoring \
- 		-f https://raw.githubusercontent.com/keptn-contrib/prometheus-service/0.7.2/deploy/role.yaml
+.PHONY: keptn-deploy
+keptn-deploy:
+	kubectl -n argocd apply -f argocd/argo-rollouts.yaml
+	kubectl -n argocd apply -f argocd/projects/system-keptn.yaml
+	kubectl -n argocd apply -f argocd/keptn.yaml
+#	helm repo add keptn https://charts.keptn.sh
+#	helm upgrade --install \
+#		keptn keptn/keptn \
+#		-n keptn \
+#		--create-namespace \
+#		--wait \
+#		-f kind/kind-values-keptn.yaml
+#	helm upgrade --install \
+#		helm-service \
+#		https://github.com/keptn/keptn/releases/download/$(KEPTN_VERSION)/helm-service-$(KEPTN_VERSION).tgz \
+#		-n keptn
+#	helm upgrade --install \
+#		jmeter-service https://github.com/keptn/keptn/releases/download/0.8.4/jmeter-service-0.8.4.tgz \
+#		-n keptn
+#	helm upgrade --install \
+#			-n keptn \
+#		  prometheus-service \
+#		  https://github.com/keptn-contrib/prometheus-service/releases/download/0.7.2/prometheus-service-0.7.2.tgz \
+#		  --set=prometheus.endpoint="http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090"
+#	helm upgrade --install \
+#			-n keptn \
+#			argo-service \
+#			https://github.com/keptn-contrib/argo-service/releases/download/0.9.1/argo-service-0.9.1.tgz
+#	#
+#	kubectl apply -n monitoring \
+# 		-f https://raw.githubusercontent.com/keptn-contrib/prometheus-service/0.7.2/deploy/role.yaml
 
 .PHONY: keptn-set-login
 keptn-set-login:
@@ -273,32 +289,19 @@ keptn-delete-project-podtato-head:
 	kubectl delete ns podtato-head-prod || true
 	# keptn delete service helloservice -p podtato-head
 
-.PHONY: nginx-ingress-deploy-manual
-nginx-ingress-deploy-manual:
-	docker pull k8s.gcr.io/ingress-nginx/controller:v1.1.1
-	kind load docker-image --name $(CLUSTER_NAME) k8s.gcr.io/ingress-nginx/controller:v1.1.1
-	helm repo add --force-update ingress-nginx https://kubernetes.github.io/ingress-nginx
-	helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
-	  --namespace ingress-nginx \
-	  --create-namespace \
-	-f kind/kind-values-ingress-nginx.yaml
-
-#	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
-#	kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io ingress-nginx-admission
-
-#.PHONY: deploy-cert-manager
-#deploy-cert-manager:
-#	kind/cert-manager_install.sh
-
-.PHONY: prometheus-stack-deploy-manual
-prometheus-stack-deploy-manual:
-	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-	helm upgrade --install \
-	prometheus-stack \
-	prometheus-community/kube-prometheus-stack \
-	--namespace monitoring \
-    --create-namespace \
-    -f kind/kind-values-prometheus.yaml
+.PHONY: keptn-create-project-sockshop
+keptn-create-project-sockshop:
+	keptn create project sockshop --shipyard=keptn/sockshop/shipyard.yaml
+	keptn create service carts --project=sockshop
+	keptn add-resource --project=sockshop --stage=prod --service=carts --resource=keptn/sockshop/jmeter/load.jmx --resourceUri=jmeter/load.jmx
+	keptn add-resource --project=sockshop --stage=prod --service=carts --resource=keptn/sockshop/slo-quality-gates.yaml --resourceUri=slo.yaml
+	keptn configure monitoring prometheus --project=sockshop --service=carts
+	keptn add-resource --project=sockshop --stage=prod --service=carts --resource=keptn/sockshop/sli-config-argo-prometheus.yaml --resourceUri=prometheus/sli.yaml
+	#
+	argocd app create --name carts-prod \
+		--repo https://github.com/keptn/examples.git --dest-server https://kubernetes.default.svc \
+		--dest-namespace sockshop-prod --path onboarding-carts/argo/carts --revision 0.11.0 \
+		--sync-policy none
 
 #.PHONY: k8s-apply
 #k8s-apply:
