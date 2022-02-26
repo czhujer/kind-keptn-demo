@@ -139,10 +139,20 @@ argocd-deploy:
 
 .PHONY: spo-deploy
 spo-deploy:
+	# wait to cert-manager up and running
+	kubectl wait -n cert-manager --timeout=2m --for=condition=available deployment cert-manager
+	kubectl wait -n cert-manager --timeout=2m --for=condition=available deployment cert-manager-webhook
+	kubectl wait -n cert-manager --timeout=2m --for=condition=available deployment cert-manager-cainjector
+	# install over argo-cd
 #	kubectl -n argocd apply -f argocd/projects/security-profiles-operator.yaml
 #	kubectl -n argocd apply -f argocd/security-profiles-operator.yaml
+	# install over kubectl
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/security-profiles-operator/v0.4.1/deploy/operator.yaml
-	kubectl -n security-profiles-operator wait --for condition=ready ds name=spo
+	# wait to spo up and running
+	sleep 2
+	kubectl -n security-profiles-operator wait --for condition=ready ds/spod
+	kubectl -n security-profiles-operator patch deployments.apps security-profiles-operator --type=merge -p '{"spec":{"replicas":1}}'
+	kubectl -n security-profiles-operator patch deployments.apps security-profiles-operator-webhook --type=merge -p '{"spec":{"replicas":1}}'
 	kubectl -n security-profiles-operator patch spod spod --type=merge -p '{"spec":{"hostProcVolumePath":"/hostproc"}}'
 	kubectl -n security-profiles-operator patch spod spod --type=merge -p '{"spec":{"enableLogEnricher":true}}' # DOCKER DESKTOP ONLY
 
