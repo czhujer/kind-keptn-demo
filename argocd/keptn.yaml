@@ -1,0 +1,177 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keptn
+  namespace: argocd
+spec:
+  destination:
+    namespace: keptn
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: system-keptn
+  source:
+    chart: keptn
+    repoURL: https://charts.keptn.sh
+    targetRevision: 0.12.0
+    helm:
+      values: |
+        continuous-delivery:
+          enabled: false
+        control-plane:
+          apiGatewayNginx:
+            type: ClusterIP
+          bridge:
+            installationType: QUALITY_GATES,CONTINUOUS_OPERATIONS
+          enabled: true
+          #
+          ingress:
+            enabled: true
+            annotations:
+              kubernetes.io/ingress.class: nginx
+              # We allow HTTP and HTTPS
+              nginx.ingress.kubernetes.io/ssl-redirect: "false"
+              # Instructs the controller to send TLS connections directly
+              #to the backend instead of letting NGINX decrypt the communication
+              nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+              # In some scenarios the exposed URL in the backend service differs
+              # from the specified path in the Ingress rule. Without a
+              # rewrite any request will return 404
+              nginx.ingress.kubernetes.io/rewrite-target: /
+            host: bridge.127.0.0.1.nip.io
+            path: /
+            pathType: Prefix
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keptn-helm-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: keptn
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: system-keptn
+  source:
+    chart: helm-service
+    repoURL: https://charts.keptn.sh
+    targetRevision: 0.12.0
+    helm:
+      values: |
+        fullnameOverride: "helm-service"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keptn-jmeter-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: keptn
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: system-keptn
+  source:
+    chart: jmeter-service
+    repoURL: https://charts.keptn.sh
+    targetRevision: 0.12.0
+    helm:
+      releaseName: jmeter-service
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keptn-prometheus-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: keptn
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: system-keptn
+  source:
+    path: chart/
+    repoURL: https://github.com/keptn-contrib/prometheus-service.git
+    targetRevision: 0.7.2
+    helm:
+      releaseName: prometheus-service
+      values: |
+        image:
+          tag: 0.7.2
+        prometheus:
+          endpoint: "http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090"
+#        distributor:
+#          image:
+#            tag: "0.12.0"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keptn-argo-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: keptn
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: system-keptn
+  source:
+    path: chart/
+    repoURL: https://github.com/keptn-contrib/argo-service.git
+    targetRevision: c44caa3
+    helm:
+      releaseName: argo-service
+      values: |
+        image:
+          # tag: "0.9.1"
+          tag: "0.9.2-dev-PR-50"
+#        distributor:
+#          image:
+#            tag: "0.10.0"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keptn-prometheus-role
+  namespace: argocd
+spec:
+  destination:
+    namespace: keptn
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: system-keptn
+  source:
+    path: deploy/
+    repoURL: https://github.com/keptn-contrib/prometheus-service.git
+    targetRevision: 0.7.2
