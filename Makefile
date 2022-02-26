@@ -1,7 +1,9 @@
 # Set environment variables
 export CLUSTER_NAME?=keptn
 #export CILIUM_VERSION?=1.10.6
-export CILIUM_VERSION?=1.11.1
+export CILIUM_VERSION?=1.11.2
+export CERT_MANAGER_CHART_VERSION="1.7.1"
+
 export KEPTN_VERSION?=0.12.0
 export TRIVY_IMAGE_CHECK=1
 
@@ -64,17 +66,20 @@ cilium-prepare-images:
 	docker pull quay.io/cilium/hubble-ui:v0.8.5
 	docker pull quay.io/cilium/hubble-ui-backend:v0.8.5
 	docker pull quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
+	docker pull docker.io/envoyproxy/envoy:v1.18.4@sha256:e5c2bb2870d0e59ce917a5100311813b4ede96ce4eb0c6bfa879e3fbe3e83935
 ifeq ($(TRIVY_IMAGE_CHECK), 1)
 	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/cilium:v$(CILIUM_VERSION)
 	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/hubble-ui:v0.8.5
 	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/hubble-ui-backend:v0.8.5
 	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
+	trivy image --severity=HIGH --exit-code=1 docker.io/envoyproxy/envoy:v1.18.4@sha256:e5c2bb2870d0e59ce917a5100311813b4ede96ce4eb0c6bfa879e3fbe3e83935
 endif
 	# Load the image onto the cluster
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/cilium:v$(CILIUM_VERSION)
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/hubble-ui:v0.8.5
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/hubble-ui-backend:v0.8.5
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
+	kind load docker-image --name $(CLUSTER_NAME) docker.io/envoyproxy/envoy:v1.18.4@sha256:e5c2bb2870d0e59ce917a5100311813b4ede96ce4eb0c6bfa879e3fbe3e83935
 
 .PHONY: cilium-install
 cilium-install:
@@ -87,6 +92,15 @@ cilium-install:
 	   -f kind/kind-values-cilium-service-monitors.yaml \
 	   --namespace kube-system \
 	   --wait
+
+.PHONY: cert-manager-deploy
+cert-manager-deploy:
+	helm repo add cert-manager https://charts.jetstack.io
+	helm upgrade --install \
+		cert-manager cert-manager/cert-manager --version "${CERT_MANAGER_CHART_VERSION}" \
+	   --namespace cert-manager \
+	   --create-namespace \
+	   --values kind/cert-manager.yaml
 
 .PHONY: argocd-deploy
 argocd-deploy:
@@ -103,13 +117,16 @@ argocd-deploy:
 
 .PHONY: argo-system-apps
 argo-system-apps:
+	# projects
 	kubectl -n argocd apply -f argocd/projects/system-monitoring.yaml
 	kubectl -n argocd apply -f argocd/projects/system-keptn.yaml
 	kubectl -n argocd apply -f argocd/argo-cd-crds.yaml
 	kubectl -n argocd apply -f argocd/prometheus-stack-crds.yaml
 	sleep 10
+	# monitoring
 	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
 	kubectl -n argocd apply -f argocd/prometheus-adapter.yaml
+	# ingress
 	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
 	kubectl -n argocd apply -f argocd/gateway-api-crds.yaml
 	kubectl -n argocd apply -f argocd/argo-rollouts.yaml

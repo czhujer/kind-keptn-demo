@@ -1,0 +1,11 @@
+---
+#image:
+#  tag: v1.4.0
+installCRDs: true
+prometheus:
+  enabled: true
+  servicemonitor:
+    enabled: true
+#webhook:
+#  image:
+#    tag: v1.4.0
