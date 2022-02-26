@@ -2,7 +2,7 @@
 export CLUSTER_NAME?=keptn
 export CILIUM_VERSION?=1.11.2
 export CERT_MANAGER_CHART_VERSION=1.7.1
-export ARGOCD_CHART_VERSION=argo-cd-3.33.7
+export ARGOCD_CHART_VERSION=3.33.7
 export KEPTN_VERSION?=0.12.0
 export TRIVY_IMAGE_CHECK=1
 
@@ -110,7 +110,8 @@ cert-manager-deploy:
 		--version "${CERT_MANAGER_CHART_VERSION}" \
 	   --namespace cert-manager \
 	   --create-namespace \
-	   --values kind/cert-manager.yaml
+	   --values kind/cert-manager.yaml \
+	   --wait
 
 .PHONY: argocd-deploy
 argocd-deploy:
@@ -138,8 +139,12 @@ argocd-deploy:
 
 .PHONY: spo-deploy
 spo-deploy:
-	kubectl -n argocd apply -f argocd/projects/security-profiles-operator.yaml
-	kubectl -n argocd apply -f argocd/security-profiles-operator.yaml
+#	kubectl -n argocd apply -f argocd/projects/security-profiles-operator.yaml
+#	kubectl -n argocd apply -f argocd/security-profiles-operator.yaml
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/security-profiles-operator/v0.4.1/deploy/operator.yaml
+	kubectl -n security-profiles-operator wait --for condition=ready ds name=spo
+	kubectl -n security-profiles-operator patch spod spod --type=merge -p '{"spec":{"hostProcVolumePath":"/hostproc"}}'
+	kubectl -n security-profiles-operator patch spod spod --type=merge -p '{"spec":{"enableLogEnricher":true}}' # DOCKER DESKTOP ONLY
 
 .PHONY: nginx-ingress-deploy
 nginx-ingress-deploy:

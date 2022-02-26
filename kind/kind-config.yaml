@@ -31,6 +31,7 @@ featureGates:
 nodes:
   - role: control-plane
     extraMounts:
+      # for SPO
       - hostPath: /proc
         containerPath: /hostproc
     kubeadmConfigPatches:
