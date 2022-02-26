@@ -1,4 +1,3 @@
-# https://keptn.sh/docs/0.12.x/quality_gates/slo/
 ---
 spec_version: '0.1.0'
 comparison:
@@ -7,10 +6,8 @@ comparison:
   aggregate_function: avg
 objectives:
   - sli: http_response_time_seconds_main_page_sum
+    key_sli: true
     pass:
-      - criteria:
-          - "<=1"
-    warning:
       - criteria:
           - "<=0.5"
   - sli: request_throughput
