@@ -2,17 +2,23 @@
 export CLUSTER_NAME?=keptn
 export CILIUM_VERSION?=1.11.2
 export CERT_MANAGER_CHART_VERSION=1.7.1
-export ARGOCD_CHART_VERSION=3.33.7
+export ARGOCD_CHART_VERSION=3.35.0
 export KEPTN_VERSION?=0.12.0 # 0.13.2
 export TRIVY_IMAGE_CHECK=1
 
 export ARGOCD_OPTS="--grpc-web --insecure --server argocd.127.0.0.1.nip.io"
 
 # kind image list
+#for kind v0.11.x
 # image: kindest/node:v1.21.2@sha256:9d07ff05e4afefbba983fac311807b3c17a5f36e7061f6cb7e2ba756255b2be4
 # image: kindest/node:v1.22.5@sha256:d409e1b1b04d3290195e0263e12606e1b83d5289e1f80e54914f60cd1237499d
 # image: kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a
+#for kind v0.11.x
 export KIND_NODE_IMAGE="kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a"
+#for kind v0.12.x
+# kindest/node:v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c
+# kindest/node:v1.22.7@sha256:1dfd72d193bf7da64765fd2f2898f78663b9ba366c2aa74be1fd7498a1873166
+# export KIND_NODE_IMAGE="kindest/node:v1.23.4@sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938b328f657c8e3f81ee0dfb9"
 
 .PHONY: kind-basic
 kind-basic: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install argocd-deploy nginx-ingress-deploy
@@ -116,10 +122,10 @@ cert-manager-deploy:
 .PHONY: argocd-deploy
 argocd-deploy:
 	# prepare image(s)
-	docker pull quay.io/argoproj/argocd:v2.3.0-rc5
+	docker pull quay.io/argoproj/argocd:v2.3.0
 	docker pull redis:6.2.6-alpine
 	docker pull quay.io/bitnami/redis-exporter:1.26.0-debian-10-r2
-	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd:v2.3.0-rc5
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd:v2.3.0
 	kind load docker-image --name $(CLUSTER_NAME) redis:6.2.6-alpine
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/bitnami/redis-exporter:1.26.0-debian-10-r2
 	# install
