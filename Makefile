@@ -3,7 +3,7 @@ export CLUSTER_NAME?=keptn
 export CILIUM_VERSION?=1.11.2
 export CERT_MANAGER_CHART_VERSION=1.7.1
 export ARGOCD_CHART_VERSION=3.33.7
-export KEPTN_VERSION?=0.12.0
+export KEPTN_VERSION?=0.12.0 # 0.13.2
 export TRIVY_IMAGE_CHECK=1
 
 export ARGOCD_OPTS="--grpc-web --insecure --server argocd.127.0.0.1.nip.io"
@@ -265,6 +265,11 @@ keptn-deploy:
 #	#
 #	kubectl apply -n monitoring \
 # 		-f https://raw.githubusercontent.com/keptn-contrib/prometheus-service/0.7.2/deploy/role.yaml
+
+.PHONY: keptn-gitops-operator-deploy
+keptn-gitops-operator-deploy:
+	kubectl -n argocd apply -f argocd/projects/system-keptn.yaml
+	kubectl -n argocd apply -f argocd/keptn-gitops-operator.yaml
 
 .PHONY: keptn-set-login
 keptn-set-login:
