@@ -1,7 +1,7 @@
 ---
 global:
   image:
-    tag: "v2.3.0"
+    tag: "v2.3.1"
     imagePullPolicy: Never
 dex:
   enabled: false
@@ -9,6 +9,8 @@ controller:
   metrics:
     enabled: true
 repoServer:
+  image:
+    imagePullPolicy: Never
   metrics:
     enabled: true
 server:

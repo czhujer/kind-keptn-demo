@@ -3,7 +3,7 @@ export CLUSTER_NAME?=keptn
 export CILIUM_VERSION?=1.11.2
 export CERT_MANAGER_CHART_VERSION=1.7.1
 export ARGOCD_CHART_VERSION=3.35.0
-export KEPTN_VERSION?=0.12.0 # 0.13.2
+export KEPTN_VERSION?=0.13.2
 export TRIVY_IMAGE_CHECK=1
 
 export ARGOCD_OPTS="--grpc-web --insecure --server argocd.127.0.0.1.nip.io"
@@ -164,8 +164,8 @@ spo-deploy:
 
 .PHONY: nginx-ingress-deploy
 nginx-ingress-deploy:
-	docker pull k8s.gcr.io/ingress-nginx/controller:v1.1.1
-	kind load docker-image --name $(CLUSTER_NAME) k8s.gcr.io/ingress-nginx/controller:v1.1.1
+	docker pull k8s.gcr.io/ingress-nginx/controller:v1.1.2
+	kind load docker-image --name $(CLUSTER_NAME) k8s.gcr.io/ingress-nginx/controller:v1.1.2
 	# ingress
 	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
 	kubectl -n argocd apply -f argocd/gateway-api-crds.yaml
