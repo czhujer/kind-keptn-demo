@@ -14,7 +14,7 @@ export ARGOCD_OPTS="--grpc-web --insecure --server argocd.127.0.0.1.nip.io"
 # image: kindest/node:v1.22.5@sha256:d409e1b1b04d3290195e0263e12606e1b83d5289e1f80e54914f60cd1237499d
 # image: kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a
 #for kind v0.11.x
-export KIND_NODE_IMAGE="kindest/node:v1.23.3@sha256:0df8215895129c0d3221cda19847d1296c4f29ec93487339149333bd9d899e5a"
+export KIND_NODE_IMAGE="kindest/node:v1.23.4@sha256:1742ff7f0b79a8aaae347b9c2ffaf9738910e721d649301791c812c162092753"
 #for kind v0.12.x
 # kindest/node:v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c
 # kindest/node:v1.22.7@sha256:1dfd72d193bf7da64765fd2f2898f78663b9ba366c2aa74be1fd7498a1873166
