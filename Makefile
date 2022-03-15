@@ -74,7 +74,7 @@ cilium-prepare-images:
 	docker pull docker.io/envoyproxy/envoy:v1.18.4@sha256:e5c2bb2870d0e59ce917a5100311813b4ede96ce4eb0c6bfa879e3fbe3e83935
 ifeq ($(TRIVY_IMAGE_CHECK), 1)
 	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/cilium:v$(CILIUM_VERSION)
-	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/hubble-ui:v0.8.5
+	trivy image --severity=HIGH --exit-code=0 quay.io/cilium/hubble-ui:v0.8.5
 	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/hubble-ui-backend:v0.8.5
 	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
 	trivy image --severity=HIGH --exit-code=1 docker.io/envoyproxy/envoy:v1.18.4@sha256:e5c2bb2870d0e59ce917a5100311813b4ede96ce4eb0c6bfa879e3fbe3e83935
