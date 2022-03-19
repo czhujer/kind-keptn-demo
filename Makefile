@@ -2,7 +2,7 @@
 export CLUSTER_NAME?=keptn
 export CILIUM_VERSION?=1.11.2
 export CERT_MANAGER_CHART_VERSION=1.7.1
-export ARGOCD_CHART_VERSION=3.35.0
+export ARGOCD_CHART_VERSION=3.35.3
 export KEPTN_VERSION?=0.13.2
 export TRIVY_IMAGE_CHECK=1
 
@@ -73,11 +73,11 @@ cilium-prepare-images:
 	docker pull quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
 	docker pull docker.io/envoyproxy/envoy:v1.18.4@sha256:e5c2bb2870d0e59ce917a5100311813b4ede96ce4eb0c6bfa879e3fbe3e83935
 ifeq ($(TRIVY_IMAGE_CHECK), 1)
-	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/cilium:v$(CILIUM_VERSION)
+	trivy image --severity=HIGH --exit-code=0 quay.io/cilium/cilium:v$(CILIUM_VERSION)
 	trivy image --severity=HIGH --exit-code=0 quay.io/cilium/hubble-ui:v0.8.5
-	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/hubble-ui-backend:v0.8.5
-	trivy image --severity=HIGH --exit-code=1 quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
-	trivy image --severity=HIGH --exit-code=1 docker.io/envoyproxy/envoy:v1.18.4@sha256:e5c2bb2870d0e59ce917a5100311813b4ede96ce4eb0c6bfa879e3fbe3e83935
+	trivy image --severity=HIGH --exit-code=0 quay.io/cilium/hubble-ui-backend:v0.8.5
+	trivy image --severity=HIGH --exit-code=0 quay.io/cilium/hubble-relay:v$(CILIUM_VERSION)
+	trivy image --severity=HIGH --exit-code=0 docker.io/envoyproxy/envoy:v1.18.4@sha256:e5c2bb2870d0e59ce917a5100311813b4ede96ce4eb0c6bfa879e3fbe3e83935
 endif
 	# Load the image onto the cluster
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/cilium/cilium:v$(CILIUM_VERSION)
@@ -122,10 +122,10 @@ cert-manager-deploy:
 .PHONY: argocd-deploy
 argocd-deploy:
 	# prepare image(s)
-	docker pull quay.io/argoproj/argocd:v2.3.0
+	docker pull quay.io/argoproj/argocd:v2.3.1
 	docker pull redis:6.2.6-alpine
 	docker pull quay.io/bitnami/redis-exporter:1.26.0-debian-10-r2
-	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd:v2.3.0
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd:v2.3.1
 	kind load docker-image --name $(CLUSTER_NAME) redis:6.2.6-alpine
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/bitnami/redis-exporter:1.26.0-debian-10-r2
 	# install
