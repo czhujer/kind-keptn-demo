@@ -5,7 +5,8 @@ networking:
   apiServerAddress: "0.0.0.0"
   disableDefaultCNI: true
 featureGates:
-  "EphemeralContainers": true
+  EphemeralContainers: true
+  SeccompDefault: true
 
 # add to the apiServer certSANs the name of the docker (dind) service in order to be able to reach the cluster through it
 #kubeadmConfigPatchesJSON6902:
@@ -41,6 +42,8 @@ nodes:
         nodeRegistration:
           kubeletExtraArgs:
             node-labels: "ingress-ready=true"
+            seccomp-default: "true"
+            feature-gates: "SeccompDefault=true"
     extraPortMappings:
       - containerPort: 80
         hostPort: 80
