@@ -197,6 +197,13 @@ prometheus-stack-deploy:
 #    --create-namespace \
 #    -f kind/kind-values-prometheus.yaml
 
+.PHONY: starboard-deploy
+starboard-deploy:
+	# projects
+	kubectl -n argocd apply -f argocd/projects/security-starboard.yaml
+	# (update) CRDs
+	kubectl -n argocd apply -f argocd/security-starboard.yaml
+
 .PHONY: keptn-prepare-images
 keptn-prepare-images:
 	# pull image locally
