@@ -21,7 +21,7 @@ export KIND_NODE_IMAGE="kindest/node:v1.23.4@sha256:1742ff7f0b79a8aaae347b9c2ffa
 # export KIND_NODE_IMAGE="kindest/node:v1.23.4@sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938b328f657c8e3f81ee0dfb9"
 
 .PHONY: kind-basic
-kind-basic: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install argocd-deploy nginx-ingress-deploy
+kind-basic: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install argocd-deploy nginx-ingress-deploy metrics-server-deploy
 
 .PHONY: kind-keptn
 kind-keptn: kind-basic prometheus-stack-deploy keptn-prepare-images keptn-deploy
@@ -177,6 +177,11 @@ nginx-ingress-deploy:
 #
 #	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
 #	kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io ingress-nginx-admission
+
+.PHONY: metrics-server-deploy
+metrics-server-deploy:
+	kubectl -n argocd apply -f argocd/projects/system-kube.yaml
+	kubectl -n argocd apply -f argocd/metrics-server.yaml
 
 .PHONY: prometheus-stack-deploy
 prometheus-stack-deploy:
