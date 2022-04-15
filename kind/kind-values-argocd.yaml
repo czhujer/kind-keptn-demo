@@ -1,7 +1,7 @@
 ---
 global:
   image:
-    tag: "v2.3.1"
+    tag: "v2.3.3"
     imagePullPolicy: Never
 dex:
   enabled: false

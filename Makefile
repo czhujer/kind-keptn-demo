@@ -1,6 +1,6 @@
 # Set environment variables
 export CLUSTER_NAME?=keptn
-export CILIUM_VERSION?=1.11.2
+export CILIUM_VERSION?=1.11.3
 export CERT_MANAGER_CHART_VERSION=1.7.1
 export ARGOCD_CHART_VERSION=3.35.3
 export KEPTN_VERSION?=0.13.2
@@ -122,10 +122,10 @@ cert-manager-deploy:
 .PHONY: argocd-deploy
 argocd-deploy:
 	# prepare image(s)
-	docker pull quay.io/argoproj/argocd:v2.3.1
+	docker pull quay.io/argoproj/argocd:v2.3.3
 	docker pull redis:6.2.6-alpine
 	docker pull quay.io/bitnami/redis-exporter:1.26.0-debian-10-r2
-	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd:v2.3.1
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd:v2.3.3
 	kind load docker-image --name $(CLUSTER_NAME) redis:6.2.6-alpine
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/bitnami/redis-exporter:1.26.0-debian-10-r2
 	# install
