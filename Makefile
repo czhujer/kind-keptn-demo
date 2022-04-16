@@ -1,7 +1,7 @@
 # Set environment variables
 export CLUSTER_NAME?=keptn
 export CILIUM_VERSION?=1.11.3
-export CERT_MANAGER_CHART_VERSION=1.7.1
+export CERT_MANAGER_CHART_VERSION=1.8.0
 export ARGOCD_CHART_VERSION=3.35.3
 export KEPTN_VERSION?=0.13.2
 export TRIVY_IMAGE_CHECK=1
@@ -22,7 +22,7 @@ export ARGOCD_OPTS="--grpc-web --insecure --server argocd.127.0.0.1.nip.io"
 export KIND_NODE_IMAGE="kindest/node:v1.23.5@sha256:a69c29d3d502635369a5fe92d8e503c09581fcd406ba6598acc5d80ff5ba81b1"
 
 .PHONY: kind-basic
-kind-basic: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install argocd-deploy nginx-ingress-deploy metrics-server-deploy
+kind-basic: kind-create kx-kind kind-install-crds cilium-prepare-images cilium-install argocd-deploy nginx-ingress-deploy
 
 .PHONY: kind-keptn
 kind-keptn: kind-basic prometheus-stack-deploy keptn-prepare-images keptn-deploy
