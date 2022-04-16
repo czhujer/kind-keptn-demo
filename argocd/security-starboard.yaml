@@ -8,12 +8,11 @@ spec:
   source:
     chart: starboard-operator
     repoURL: https://aquasecurity.github.io/helm-charts/
-    targetRevision: 0.9.1
+    targetRevision: 0.10.4
     helm:
       values: |
-        targetNamespaces: app
-        trivy:
-          ignoreUnfixed: true
+#        trivy:
+#          ignoreUnfixed: true
   destination:
     server: https://kubernetes.default.svc
     namespace: starboard-system
@@ -24,6 +23,16 @@ spec:
     syncOptions:
       - CreateNamespace=true
   ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: clustercompliancereports.aquasecurity.github.io
+      jsonPointers:
+        - /spec/names/categories
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: clustercompliancedetailreports.aquasecurity.github.io
+      jsonPointers:
+        - /spec/names/categories
     - group: apiextensions.k8s.io
       kind: CustomResourceDefinition
       name: ciskubebenchreports.aquasecurity.github.io
