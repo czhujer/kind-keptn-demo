@@ -8,7 +8,7 @@ spec:
   source:
     chart: starboard-operator
     repoURL: https://aquasecurity.github.io/helm-charts/
-    targetRevision: 0.10.4
+    targetRevision: 0.10.6
     helm:
       values: |
 #        trivy:
