@@ -23,7 +23,7 @@ spec:
         - '.webhooks[]?.clientConfig.caBundle'
   source:
     repoURL: https://github.com/kubernetes-sigs/security-profiles-operator.git
-    targetRevision: v0.4.1
+    targetRevision: v0.4.3
     path: deploy
     directory:
       # exclude: '*'
