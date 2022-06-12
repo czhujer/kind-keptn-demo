@@ -18,7 +18,7 @@ spec:
   source:
     chart: keptn
     repoURL: https://charts.keptn.sh
-    targetRevision: 0.13.2
+    targetRevision: 0.16.0
     helm:
       values: |
         continuous-delivery:
