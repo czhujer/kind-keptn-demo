@@ -103,8 +103,8 @@ jobs:
       - name: "prepare cluster: install nginx"
         run: make nginx-ingress-deploy
 
-      - name: "prepare cluster: install cert-manager"
-        run: make cert-manager-deploy
+#      - name: "prepare cluster: install cert-manager"
+#        run: make cert-manager-deploy
 
       - name: "debug info: wait"
         run: sleep 10
