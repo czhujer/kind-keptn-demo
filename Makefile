@@ -319,3 +319,20 @@ keptn-create-project-sockshop:
 		--repo https://github.com/keptn/examples.git --dest-server https://kubernetes.default.svc \
 		--dest-namespace sockshop-prod --path onboarding-carts/argo/carts --revision 0.11.0 \
 		--sync-policy none
+
+.PHONY: test-network-apply-assets
+test-network-apply-assets:
+	kubectl get ns test-network 1>/dev/null 2>/dev/null || kubectl create ns test-network
+	kubectl apply -n test-network -k tests/assets/k8s/podinfo --wait=true
+	kubectl apply -n test-network -f tests/assets/k8s/client  --wait=true
+	kubectl apply -n test-network -f tests/assets/k8s/networkpolicy --wait=true
+
+.PHONY: test-network-check-status
+test-network-check-status:
+#	linkerd top deployment/podinfo --namespace test-network
+#	linkerd tap deployment/client --namespace test-network
+	kubectl exec -n test-network deploy/client -c client -- curl -s podinfo:9898
+
+.PHONY: run-ginkgo
+run-ginkgo:
+	cd tests/e2e && go test
