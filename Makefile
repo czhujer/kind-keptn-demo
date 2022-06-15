@@ -103,19 +103,19 @@ cilium-install:
 .PHONY: cert-manager-deploy
 cert-manager-deploy:
 	# prepare image(s)
-	docker pull quay.io/jetstack/cert-manager-controller:v1.7.1
-	docker pull quay.io/jetstack/cert-manager-webhook:v1.7.1
-	docker pull quay.io/jetstack/cert-manager-cainjector:v1.7.1
-	docker pull quay.io/jetstack/cert-manager-ctl:v1.7.1
-	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-controller:v1.7.1
-	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-webhook:v1.7.1
-	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-cainjector:v1.7.1
-	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-ctl:v1.7.1
+	docker pull quay.io/jetstack/cert-manager-controller:v$(CERT_MANAGER_CHART_VERSION)
+	docker pull quay.io/jetstack/cert-manager-webhook:v$(CERT_MANAGER_CHART_VERSION)
+	docker pull quay.io/jetstack/cert-manager-cainjector:v$(CERT_MANAGER_CHART_VERSION)
+	docker pull quay.io/jetstack/cert-manager-ctl:v$(CERT_MANAGER_CHART_VERSION)
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-controller:v$(CERT_MANAGER_CHART_VERSION)
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-webhook:v$(CERT_MANAGER_CHART_VERSION)
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-cainjector:v$(CERT_MANAGER_CHART_VERSION)
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/jetstack/cert-manager-ctl:v$(CERT_MANAGER_CHART_VERSION)
 	#
 	helm repo add cert-manager https://charts.jetstack.io
 	helm upgrade --install \
 		cert-manager cert-manager/cert-manager \
-		--version "${CERT_MANAGER_CHART_VERSION}" \
+		--version "v${CERT_MANAGER_CHART_VERSION}" \
 	   --namespace cert-manager \
 	   --create-namespace \
 	   --values kind/cert-manager.yaml \
@@ -124,11 +124,11 @@ cert-manager-deploy:
 .PHONY: argocd-deploy
 argocd-deploy:
 	# prepare image(s)
-	docker pull quay.io/argoproj/argocd:v2.3.3
+	docker pull quay.io/argoproj/argocd:v2.3.4
 	docker pull quay.io/argoproj/argocd-applicationset:v0.4.1
 	docker pull redis:6.2.6-alpine
 	docker pull bitnami/redis-exporter:1.26.0-debian-10-r2
-	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd:v2.3.3
+	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd:v2.3.4
 	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd-applicationset:v0.4.1
 	kind load docker-image --name $(CLUSTER_NAME) redis:6.2.6-alpine
 	kind load docker-image --name $(CLUSTER_NAME) bitnami/redis-exporter:1.26.0-debian-10-r2
@@ -147,29 +147,10 @@ argocd-deploy:
 	kubectl -n argocd apply -f argocd/argo-cd-crds.yaml
 	# kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
 
-.PHONY: spo-deploy
-spo-deploy:
-	# wait to cert-manager up and running
-	kubectl wait -n cert-manager --timeout=2m --for=condition=available deployment cert-manager
-	kubectl wait -n cert-manager --timeout=2m --for=condition=available deployment cert-manager-webhook
-	kubectl wait -n cert-manager --timeout=2m --for=condition=available deployment cert-manager-cainjector
-	# install over argo-cd
-#	kubectl -n argocd apply -f argocd/projects/security-profiles-operator.yaml
-#	kubectl -n argocd apply -f argocd/security-profiles-operator.yaml
-	# install over kubectl
-	kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/security-profiles-operator/v0.4.1/deploy/operator.yaml
-	# wait to spo up and running
-	sleep 2
-	kubectl -n security-profiles-operator wait --for condition=ready ds/spod
-	kubectl -n security-profiles-operator patch deployments.apps security-profiles-operator --type=merge -p '{"spec":{"replicas":1}}'
-	kubectl -n security-profiles-operator patch deployments.apps security-profiles-operator-webhook --type=merge -p '{"spec":{"replicas":1}}'
-	kubectl -n security-profiles-operator patch spod spod --type=merge -p '{"spec":{"hostProcVolumePath":"/hostproc"}}'
-	kubectl -n security-profiles-operator patch spod spod --type=merge -p '{"spec":{"enableLogEnricher":true}}' # DOCKER DESKTOP ONLY
-
 .PHONY: nginx-ingress-deploy
 nginx-ingress-deploy:
-	docker pull k8s.gcr.io/ingress-nginx/controller:v1.2.0
-	kind load docker-image --name $(CLUSTER_NAME) k8s.gcr.io/ingress-nginx/controller:v1.2.0
+	docker pull k8s.gcr.io/ingress-nginx/controller:v1.2.1
+	kind load docker-image --name $(CLUSTER_NAME) k8s.gcr.io/ingress-nginx/controller:v1.2.1
 	# ingress
 	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
 	kubectl -n argocd apply -f argocd/gateway-api-crds.yaml
@@ -336,13 +317,13 @@ keptn-deploy-slow-version-podtato-head:
 	keptn trigger delivery --project=podtato-head --service=helloservice \
 			--image="ghcr.io/podtato-head/podtatoserver" --tag=v0.1.2
 
-.PHONY: prepare-helm-charts
-prepare-helm-charts:
+.PHONY: keptn-helloserver-prepare-helm-charts
+keptn-helloserver-prepare-helm-charts:
 	helm package ./helm/helloserver/ -d helm && mv helm/helloserver-`cat helm/helloserver/Chart.yaml |yq eval '.version' - |tr -d '\n'`.tgz helm/helloservice.tgz
 
 .PHONY: keptn-redeploy-chart-podtato-head
 keptn-redeploy-chart-podtato-head:
-	make prepare-helm-charts && \
+	make keptn-helloserver-prepare-helm-charts && \
 	keptn add-resource --project=podtato-head --service=helloservice --all-stages --resource=./helm/helloservice.tgz && \
 	make keptn-deploy-correct-version-podtato-head
 
@@ -366,16 +347,3 @@ keptn-create-project-sockshop:
 		--repo https://github.com/keptn/examples.git --dest-server https://kubernetes.default.svc \
 		--dest-namespace sockshop-prod --path onboarding-carts/argo/carts --revision 0.11.0 \
 		--sync-policy none
-
-#.PHONY: k8s-apply
-#k8s-apply:
-#	kubectl get ns cilium-linkerd 1>/dev/null 2>/dev/null || kubectl create ns cilium-linkerd
-#	kubectl apply -k k8s/podinfo -n cilium-linkerd
-#	kubectl apply -f k8s/client
-#	kubectl apply -f k8s/networkpolicy
-#
-#.PHONY: check-status
-#check-status:
-#	linkerd top deployment/podinfo --namespace cilium-linkerd
-#	linkerd tap deployment/client --namespace cilium-linkerd
-#	kubectl exec deploy/client -n cilium-linkerd -c client -- curl -s podinfo:9898
