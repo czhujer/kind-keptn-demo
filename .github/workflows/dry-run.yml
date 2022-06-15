@@ -106,6 +106,9 @@ jobs:
 #      - name: "prepare cluster: install cert-manager"
 #        run: make cert-manager-deploy
 
+      - name: "prepare cluster: wait for argo-cd nginx init"
+        run: sleep 5
+
       - name: "argo-cd: wait to ingress ready"
         run: kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx
 
