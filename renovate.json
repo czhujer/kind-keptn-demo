@@ -2,10 +2,20 @@
   "extends": [
     "config:base"
   ],
+  "assignees": [
+    "czhujer"
+  ],
   "kubernetes": {
-    "fileMatch": ["^kind/.*\\.yaml$"]
+    "fileMatch": ["^kind/kind-config.*\\.yaml$"]
   },
   "argocd": {
     "fileMatch": ["argocd/.+\\.yaml$"]
+  },
+  "helm-values": {
+    "fileMatch": [
+      "(^|/)values\\.yaml$",
+      "kind/kind-values.*\\.yaml$",
+      "kind/cert-manager\\.yaml$"
+    ]
   }
 }
