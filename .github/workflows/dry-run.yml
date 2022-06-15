@@ -1,0 +1,185 @@
+name: dry-run in kind
+
+env:
+  kind_version: "v0.14.0"
+  kind_kubectl_version: "v1.24.1"
+  argocd_params: "--grpc-web --insecure --server argocd.127.0.0.1.nip.io"
+  argocd_version: "2.3.4"
+  argocd_projects_dir: "argocd/projects"
+  go_version: '>=1.18.0'
+  ACK_GINKGO_DEPRECATIONS: "1.16.5"
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - "trivy check"
+      - "sh-checker"
+    branches:
+      - main
+    pull_request:
+      branches:
+        - main
+    types:
+      - completed
+  pull_request:
+    branches:
+      - main
+#    paths:
+#      - .github/workflows/dry-run.yml
+#      - argocd/**
+#      - kind/**
+#      - tests/e2e/**
+#      - Makefile
+  push:
+    branches-ignore:
+      - main
+#    paths:
+#      - .github/workflows/dry-run.yml
+#      - argocd/**
+#      - kind/**
+#      - tests/e2e/**
+#      - Makefile
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      checks: write
+      pull-requests: write
+
+    steps:
+      - name: "prepare env: clone repo"
+        uses: actions/checkout@v3
+
+#      - name: "prepare env: show vars"
+#        run: env
+
+#      - name: "debug: end workflow"
+#        run: "false"
+
+      - name: "prepare env: install make"
+        run: |
+          sudo apt update
+          sudo apt install make -y
+
+      - name: "prepare env: install golang"
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.go_version }}
+
+      - name: "prepare env: init kind"
+        uses: helm/kind-action@main
+        with:
+          version: "${{ env.kind_version }}"
+          kubectl_version: "${{ env.kind_kubectl_version }}"
+          install_only: true
+
+      - name: "cluster create"
+        run: make kind-create
+
+      - name: "debug info: golang version"
+        run: go version
+
+      - name: "debug info: kubectl version"
+        run: kubectl version
+
+      - name: "debug info: k8s nodes and cluster-info"
+        run: kubectl get nodes -o wide; kubectl cluster-info
+
+      - name: "prepare cluster: fix prometheus-operator's CRDs"
+        run: make kind-install-crds
+
+      - name: "prepare cluster: install cilium"
+        run: make cilium-install
+
+      - name: "prepare cluster: show all pods"
+        run: sleep 5 && kubectl get pods -A
+
+      - name: "prepare cluster: install ArgoCD"
+        run: make argocd-deploy
+
+      - name: "prepare cluster: install nginx"
+        run: make nginx-ingress-deploy
+
+      - name: "prepare cluster: install cert-manager"
+        run: make cert-manager-deploy
+
+      - name: "debug info: wait"
+        run: sleep 10
+
+      - name: "debug info: show all pods"
+        run: kubectl get pods -A
+
+      - name: "debug info: show all services"
+        run: kubectl get svc -A
+
+      - name: "argo-cd: init"
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: ${{ env.argocd_version }}
+          command: version
+          options: --client
+
+      - name: "argo-cd: create projects"
+        run: kubectl apply -f ${{ env.argocd_projects_dir }}
+
+      - name: "argo-cd: install changed app's defs"
+        run: ./scripts/detect_updated_argocd_apps.sh
+
+      - name: "argo-cd: show all apps"
+        run: argocd app list ${{ env.argocd_params }}
+
+      - name: run test-network test - assets
+        run: make test-network-apply-assets
+
+      - name: run test-network test - wait to assets
+        run: |
+          kubectl wait -n test-network --timeout=2m --for=condition=available deployment client
+          kubectl wait -n test-network --timeout=2m --for=condition=available deployment podinfo
+
+      - name: run test-network test - debug
+        run: kubectl -n test-network get po,svc,cnp
+
+      - name: run test-network test - check
+        run: |
+          rs=$(make test-network-check-status)
+          echo "$rs"
+          echo "$rs" |grep "greetings from podinfo"
+
+      - name: "e2e tests: install dependencies"
+        run: |
+          cd tests/e2e
+          go mod vendor
+          go env -w GO111MODULE=auto
+
+      - name: "e2e tests: run"
+        id: runE2eTests
+        run: |
+          cd tests/e2e
+          go test ./... -report-dir=./junit -v
+
+      - name: "e2e tests: debug info"
+        if: failure() && steps.runE2eTests.outcome == 'failure'
+        run: |
+          kubectl get pods -A -o wide || true
+          kubectl get svc -A || true
+          kubectl get secrets -A || true
+          kubectl get cnp -A || true
+          kubectl get ccnp -A || true
+          kubectl get issuers -A || true
+          kubectl get certificates -A || true
+
+#      - name: Publish Test Report
+#        uses: mikepenz/action-junit-report@v3
+#        if: always()
+#        with:
+#          report_paths: 'tests/e2e/junit/*.xml'
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        if: always()
+        with:
+          comment_mode: off
+          files: 'tests/e2e/**/junit_*.xml'
