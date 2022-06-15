@@ -158,11 +158,14 @@ jobs:
       - name: run test-network test - wait to assets
         id: runNetTestWait
         run: |
-          kubectl wait -n test-network --timeout=2m --for=condition=available deployment client
-          kubectl wait -n test-network --timeout=2m --for=condition=available deployment podinfo
+          kubectl wait -n test-network --timeout=3m --for=condition=available deployment client
+          kubectl wait -n test-network --timeout=3m --for=condition=available deployment podinfo
 
       - name: run test-network test - debug
-        run: kubectl -n test-network get po,svc,cnp
+        if: failure() && steps.runNetTestWait.outcome == 'failure'
+        run: |
+          kubectl -n test-network get po,svc,cnp || true
+          kubectl -n test-network describe deployments/client || true
 
       - name: run test-network test - check
         run: |
@@ -183,7 +186,7 @@ jobs:
 #          go test ./... -report-dir=./junit -v
 
       - name: "e2e tests: debug info"
-        if: failure() && (steps.runE2eTests.outcome == 'failure' || steps.runNetTestWait.outcome == 'failure')
+        if: failure() && steps.runE2eTests.outcome == 'failure'
         run: |
           kubectl get pods -A -o wide || true
           kubectl get svc -A || true
