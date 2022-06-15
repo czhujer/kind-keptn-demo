@@ -142,14 +142,6 @@ nginx-ingress-deploy:
 	# ingress
 	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
 	kubectl -n argocd apply -f argocd/gateway-api-crds.yaml
-#	helm repo add --force-update ingress-nginx https://kubernetes.github.io/ingress-nginx
-#	helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
-#	  --namespace ingress-nginx \
-#	  --create-namespace \
-#	-f kind/kind-values-ingress-nginx.yaml
-#
-#	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
-#	kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io ingress-nginx-admission
 
 .PHONY: metrics-server-deploy
 metrics-server-deploy:
@@ -166,14 +158,6 @@ prometheus-stack-deploy:
 	#monitoring
 	kubectl -n argocd apply -f argocd/prometheus-stack.yaml
 	kubectl -n argocd apply -f argocd/prometheus-adapter.yaml
-	# old way
-#	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-#	helm upgrade --install \
-#	prometheus-stack \
-#	prometheus-community/kube-prometheus-stack \
-#	--namespace monitoring \
-#    --create-namespace \
-#    -f kind/kind-values-prometheus.yaml
 
 .PHONY: starboard-deploy
 starboard-deploy:

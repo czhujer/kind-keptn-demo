@@ -100,10 +100,10 @@ jobs:
       - name: "prepare cluster: install ArgoCD"
         run: make argocd-deploy
 
-      - name: "prepare cluster: wait for argo-cd ready"
+      - name: "prepare cluster: wait for argo-cd server ready"
         run: kubectl wait -n argocd --timeout=2m --for=condition=available deployment argocd-single-server
 
-      - name: "prepare cluster: install nginx"
+      - name: "prepare cluster: install nginx-ingress (and gateway-api CRDs)"
         run: make nginx-ingress-deploy
 
       - name: "prepare cluster: wait for argo-cd nginx init"
