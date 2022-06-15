@@ -156,6 +156,7 @@ jobs:
         run: make test-network-apply-assets
 
       - name: run test-network test - wait to assets
+        id: runNetTestWait
         run: |
           kubectl wait -n test-network --timeout=2m --for=condition=available deployment client
           kubectl wait -n test-network --timeout=2m --for=condition=available deployment podinfo
@@ -180,17 +181,17 @@ jobs:
 #        run: |
 #          cd tests/e2e
 #          go test ./... -report-dir=./junit -v
-#
-#      - name: "e2e tests: debug info"
-#        if: failure() && steps.runE2eTests.outcome == 'failure'
-#        run: |
-#          kubectl get pods -A -o wide || true
-#          kubectl get svc -A || true
-#          kubectl get secrets -A || true
-#          kubectl get cnp -A || true
-#          kubectl get ccnp -A || true
-#          kubectl get issuers -A || true
-#          kubectl get certificates -A || true
+
+      - name: "e2e tests: debug info"
+        if: failure() && (steps.runE2eTests.outcome == 'failure' || steps.runNetTestWait.outcome == 'failure')
+        run: |
+          kubectl get pods -A -o wide || true
+          kubectl get svc -A || true
+          kubectl get secrets -A || true
+          kubectl get cnp -A || true
+          kubectl get ccnp -A || true
+          kubectl get issuers -A || true
+          kubectl get certificates -A || true
 
 #      - name: Publish Test Report
 #        uses: mikepenz/action-junit-report@v3
