@@ -110,9 +110,11 @@ jobs:
         run: kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx
 
       - name: "debug info: show all pods"
+        if: always()
         run: kubectl get pods -A
 
       - name: "debug info: show all services"
+        if: always()
         run: kubectl get svc -A
 
       - name: "argo-cd: init"
