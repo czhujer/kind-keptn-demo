@@ -125,51 +125,51 @@ jobs:
       - name: "argo-cd: create projects"
         run: kubectl apply -f ${{ env.argocd_projects_dir }}
 
-      - name: "argo-cd: install changed app's defs"
-        run: ./scripts/detect_updated_argocd_apps.sh
+#      - name: "argo-cd: install changed app's defs"
+#        run: ./scripts/detect_updated_argocd_apps.sh
 
       - name: "argo-cd: show all apps"
         run: argocd app list ${{ env.argocd_params }}
 
-      - name: run test-network test - assets
-        run: make test-network-apply-assets
+#      - name: run test-network test - assets
+#        run: make test-network-apply-assets
+#
+#      - name: run test-network test - wait to assets
+#        run: |
+#          kubectl wait -n test-network --timeout=2m --for=condition=available deployment client
+#          kubectl wait -n test-network --timeout=2m --for=condition=available deployment podinfo
+#
+#      - name: run test-network test - debug
+#        run: kubectl -n test-network get po,svc,cnp
+#
+#      - name: run test-network test - check
+#        run: |
+#          rs=$(make test-network-check-status)
+#          echo "$rs"
+#          echo "$rs" |grep "greetings from podinfo"
 
-      - name: run test-network test - wait to assets
-        run: |
-          kubectl wait -n test-network --timeout=2m --for=condition=available deployment client
-          kubectl wait -n test-network --timeout=2m --for=condition=available deployment podinfo
-
-      - name: run test-network test - debug
-        run: kubectl -n test-network get po,svc,cnp
-
-      - name: run test-network test - check
-        run: |
-          rs=$(make test-network-check-status)
-          echo "$rs"
-          echo "$rs" |grep "greetings from podinfo"
-
-      - name: "e2e tests: install dependencies"
-        run: |
-          cd tests/e2e
-          go mod vendor
-          go env -w GO111MODULE=auto
-
-      - name: "e2e tests: run"
-        id: runE2eTests
-        run: |
-          cd tests/e2e
-          go test ./... -report-dir=./junit -v
-
-      - name: "e2e tests: debug info"
-        if: failure() && steps.runE2eTests.outcome == 'failure'
-        run: |
-          kubectl get pods -A -o wide || true
-          kubectl get svc -A || true
-          kubectl get secrets -A || true
-          kubectl get cnp -A || true
-          kubectl get ccnp -A || true
-          kubectl get issuers -A || true
-          kubectl get certificates -A || true
+#      - name: "e2e tests: install dependencies"
+#        run: |
+#          cd tests/e2e
+#          go mod vendor
+#          go env -w GO111MODULE=auto
+#
+#      - name: "e2e tests: run"
+#        id: runE2eTests
+#        run: |
+#          cd tests/e2e
+#          go test ./... -report-dir=./junit -v
+#
+#      - name: "e2e tests: debug info"
+#        if: failure() && steps.runE2eTests.outcome == 'failure'
+#        run: |
+#          kubectl get pods -A -o wide || true
+#          kubectl get svc -A || true
+#          kubectl get secrets -A || true
+#          kubectl get cnp -A || true
+#          kubectl get ccnp -A || true
+#          kubectl get issuers -A || true
+#          kubectl get certificates -A || true
 
 #      - name: Publish Test Report
 #        uses: mikepenz/action-junit-report@v3
@@ -177,9 +177,9 @@ jobs:
 #        with:
 #          report_paths: 'tests/e2e/junit/*.xml'
 
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v1
-        if: always()
-        with:
-          comment_mode: off
-          files: 'tests/e2e/**/junit_*.xml'
+#      - name: Publish Test Results
+#        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+#        if: always()
+#        with:
+#          comment_mode: off
+#          files: 'tests/e2e/**/junit_*.xml'
