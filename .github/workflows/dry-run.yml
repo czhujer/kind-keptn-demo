@@ -128,6 +128,9 @@ jobs:
 #      - name: "argo-cd: install changed app's defs"
 #        run: ./scripts/detect_updated_argocd_apps.sh
 
+      - name: "argo-cd: wait to ingress ready"
+        run: kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress
+
       - name: "argo-cd: show all apps"
         run: argocd app list ${{ env.argocd_params }}
 
