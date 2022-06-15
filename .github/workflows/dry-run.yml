@@ -127,7 +127,7 @@ jobs:
         if: always()
         run: kubectl get svc -A
 
-      - name: "argo-cd: init"
+      - name: "argo-cd: cli init"
         uses: clowdhaus/argo-cd-action/@main
         with:
           version: ${{ env.argocd_version }}
@@ -139,6 +139,12 @@ jobs:
 
 #      - name: "argo-cd: install changed app's defs"
 #        run: ./scripts/detect_updated_argocd_apps.sh
+
+      - name: "argo-cd: install prometheus-stack-deploy"
+        run: make prometheus-stack-deploy
+
+      - name: "argo-cd: install keptn"
+        run: make keptn-prepare-images keptn-deploy
 
       - name: "argo-cd: show all apps"
         run: argocd app list ${{ env.argocd_params }}
