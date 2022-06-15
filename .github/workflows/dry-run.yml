@@ -152,6 +152,15 @@ jobs:
       - name: "argo-cd: show all apps"
         run: argocd app list ${{ env.argocd_params }}
 
+      - name: "keptn: download cli"
+        run: curl -sL https://get.keptn.sh | bash
+
+      - name: "keptn: set login (and check keptn api)"
+        run: make keptn-set-login
+
+      - name: "keptn: prepare helm chart for hello"
+        run: make keptn-helloserver-prepare-helm-charts
+
       - name: run test-network test - assets
         run: make test-network-apply-assets
 
