@@ -110,7 +110,7 @@ jobs:
         run: sleep 5
 
       - name: "argo-cd: wait to ingress ready"
-        run: kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx
+        run: kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx-controller
 
       - name: "debug info: show all pods"
         if: always()
