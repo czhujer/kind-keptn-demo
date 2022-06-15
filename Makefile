@@ -206,7 +206,7 @@ endif
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/jmeter-service:$(KEPTN_VERSION)
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/helm-service:$(KEPTN_VERSION)
 	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/prometheus-service:0.8.0
-	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/argo-service:0.9.1
+	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/argo-service:0.9.4
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:0.10.0
 
 .PHONY: keptn-deploy
