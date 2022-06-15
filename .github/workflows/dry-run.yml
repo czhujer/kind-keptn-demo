@@ -107,7 +107,7 @@ jobs:
         run: make nginx-ingress-deploy
 
       - name: "prepare cluster: wait for argo-cd nginx init"
-        run: sleep 10
+        run: sleep 15
 
 #      - name: "prepare cluster: install cert-manager"
 #        run: make cert-manager-deploy
@@ -145,6 +145,9 @@ jobs:
 
       - name: "argo-cd: install keptn"
         run: make keptn-prepare-images keptn-deploy
+
+      - name: "argo-cd: wait to sync new apps"
+        run: sleep 15
 
       - name: "argo-cd: show all apps"
         run: argocd app list ${{ env.argocd_params }}
