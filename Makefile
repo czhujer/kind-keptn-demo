@@ -4,7 +4,7 @@ export CILIUM_VERSION?=1.11.5
 export CERT_MANAGER_CHART_VERSION=1.8.1
 export ARGOCD_CHART_VERSION=4.8.3
 export KEPTN_VERSION?=0.13.2
-export TRIVY_IMAGE_CHECK=1
+export TRIVY_IMAGE_CHECK=0
 
 export ARGOCD_OPTS="--grpc-web --insecure --server argocd.127.0.0.1.nip.io"
 
