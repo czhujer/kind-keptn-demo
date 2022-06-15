@@ -107,13 +107,17 @@ jobs:
         run: make nginx-ingress-deploy
 
       - name: "prepare cluster: wait for argo-cd nginx init"
-        run: sleep 5
+        run: sleep 10
 
 #      - name: "prepare cluster: install cert-manager"
 #        run: make cert-manager-deploy
 
       - name: "argo-cd: wait to ingress ready"
         run: kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx-controller
+
+      - name: "debug info: show all deployments"
+        if: always()
+        run: kubectl get deployments -A
 
       - name: "debug info: show all pods"
         if: always()
