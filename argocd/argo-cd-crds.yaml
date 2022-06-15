@@ -18,5 +18,5 @@ spec:
   project: default
   source:
     repoURL: https://github.com/argoproj/argo-cd.git
-    targetRevision: v2.3.3
+    targetRevision: v2.3.4
     path: manifests/crds

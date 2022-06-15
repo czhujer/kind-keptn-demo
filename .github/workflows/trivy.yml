@@ -1,0 +1,68 @@
+name: trivy check
+env:
+  TRIVY_VERSION: 0.28.1
+  TRIVY_EXIT_CODE: 1
+  TRIVY_IGNORE_UNFIXED: true
+  TRIVY_SKIP_FILES: "k8s-the-easy-way/k8s-manifests/inspektor-gadget-all.yaml"
+  TRIVY_SKIP_DIRS: "tests/assets/k8s"
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches-ignore:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+    name: run trivy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v${{ env.TRIVY_VERSION }}
+
+      - name: Show version
+        run: trivy --version
+
+      - name: Run Scan
+        continue-on-error: true
+        run: trivy conf -f table .
+
+#       - name: Run Trivy vulnerability scanner in IaC mode
+#         uses: aquasecurity/trivy-action@master
+#         with:
+#           scan-type: 'config'
+#           hide-progress: false
+#           format: 'table'
+#           exit-code: '1'
+#           ignore-unfixed: true
+#           # severity: 'CRITICAL,HIGH'
+
+      - name: Run Scan
+        continue-on-error: true
+        run: trivy conf -f sarif --output trivy-results.sarif .
+
+#       - name: Upload output file
+#         if: ${{ github.actor!= 'dependabot[bot]' }}
+#         uses: actions/upload-artifact@v3
+#         with:
+#           name: trivy-results.sarif
+#           path: trivy-results.sarif
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: ${{ github.actor!= 'dependabot[bot]' }}
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: trivy-iac

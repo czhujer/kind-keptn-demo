@@ -17,22 +17,17 @@ spec:
   source:
     chart: argo-rollouts
     repoURL: https://argoproj.github.io/argo-helm
-    targetRevision: 2.9.3
+    targetRevision: 2.16.0
     helm:
       values: |
         controller:
-          image:
-            tag: v1.2.0-rc1
           metrics:
             enabled: true
             serviceMonitor:
               enabled: true
         dashboard:
-          image:
-            tag: v1.2.0-rc1
           enabled: true
           ingress:
             enabled: true
             hosts:
-             - argo-rollouts.127.0.0.1.nip.io
-        
+              - argo-rollouts.127.0.0.1.nip.io
