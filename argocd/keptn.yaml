@@ -16,9 +16,13 @@ spec:
       - CreateNamespace=true
   project: system-keptn
   source:
-    chart: keptn
-    repoURL: https://charts.keptn.sh
-    targetRevision: 0.13.6
+#    chart: keptn
+#    repoURL: https://charts.keptn.sh
+#    targetRevision: 0.13.6
+    # temporary switch to forked chart
+    repoURL: https://github.com/czhujer/keptn-keptn
+    targetRevision: pm-update-mongodb-chart-for-13-x
+    path: installer/manifests/keptn/charts/keptn
     helm:
       values: |
         continuous-delivery:
