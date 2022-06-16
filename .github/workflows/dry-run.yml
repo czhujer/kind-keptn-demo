@@ -143,29 +143,53 @@ jobs:
       - name: "argo-cd: install prometheus-stack-deploy"
         run: make prometheus-stack-deploy
 
-      - name: "argo-cd: install keptn"
-        run: make keptn-prepare-images keptn-deploy
+      - name: "argo-cd: keptn-prepare-images and install projects"
+        run: |
+          make keptn-prepare-images
+          kubectl -n argocd apply -f argocd/projects/system-keptn.yaml
 
-      - name: "argo-cd: wait to sync new apps"
-        run: sleep 60
+      - name: "argo-cd: install argo-rollouts (and sleep)"
+        run: kubectl -n argocd apply -f argocd/argo-rollouts.yaml && sleep 10
 
-      - name: "argo-cd: show all apps"
-        run: argocd app list ${{ env.argocd_params }}
+      - name: "argo-cd: install keptn-nats (and sleep)"
+        run: kubectl -n argocd apply -f argocd/keptn-nats.yaml && sleep 10
 
-      - name: "keptn: wait for deploy keptn services"
-        id: keptnWaitToReady
-        timeout-minutes: 10
+      - name: "argo-cd: install keptn-mongodb (and sleep)"
+        run: kubectl -n argocd apply -f argocd/keptn-mongodb.yaml && sleep 10
+
+      - name: "keptn: wait for keptn nats & mongodb ready"
+        id: keptnWaitToReady1
+        timeout-minutes: 30
         run: |
           kubectl -n keptn wait --timeout=10m pod --for=condition=ready -l app=keptn-nats-cluster
           kubectl -n keptn wait --timeout=10m deployments --for=condition=available -l app.kubernetes.io/component=mongodb
-          kubectl -n keptn wait --timeout=10m deployments --for=condition=available -l argocd.argoproj.io/instance=keptn
 
-      - name: "keptn: debug info"
-        if: failure() && steps.keptnWaitToReady.outcome == 'failure'
+      - name: "keptn: debug info (nats & mongodb)"
+        if: failure() && steps.keptnWaitToReady1.outcome == 'failure'
         run: |
+          kubectl -n keptn get deployments,sts || true
           kubectl -n keptn get pods -o wide || true
           kubectl -n keptn get svc || true
+
+      - name: "argo-cd: install keptn control plane (and sleep)"
+        run: kubectl -n argocd apply -f argocd/keptn.yaml && sleep 10
+
+      - name: "keptn: wait for deploy keptn services"
+        id: keptnWaitToReady2
+        timeout-minutes: 30
+        run: |
+          kubectl -n keptn wait --timeout=30m deployments --for=condition=available -l argocd.argoproj.io/instance=keptn
+
+      - name: "keptn: debug info"
+        if: failure() && steps.keptnWaitToReady2.outcome == 'failure'
+        run: |
           kubectl -n keptn get deployments,sts || true
+          kubectl -n keptn get pods -o wide || true
+          kubectl -n keptn get svc || true
+
+      - name: "argo-cd: show all apps"
+        if: always()
+        run: argocd app list ${{ env.argocd_params }}
 
       - name: "keptn: download cli"
         run: curl -sL https://get.keptn.sh | bash
