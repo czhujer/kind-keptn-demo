@@ -22,7 +22,14 @@ spec:
     targetRevision: 0.7.5
     helm:
       values: |
+        # enable monitoring
+        exporter:
+          enabled: true
+          serviceMonitor:
+            enabled: false
+        # fix for name logic (because: bumped version or argo-cd rendering)
         nameOverride: keptn-nats-cluster
+        # values from keptn chart
         nats.cluster.replicas: 3
         natsbox:
           enabled: false
