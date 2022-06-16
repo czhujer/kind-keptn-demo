@@ -113,12 +113,12 @@ spec:
   source:
     path: chart/
     repoURL: https://github.com/keptn-contrib/prometheus-service.git
-    targetRevision: 0.7.3
+    targetRevision: 0.7.5
     helm:
       releaseName: prometheus-service
       values: |
         image:
-          tag: 0.7.3
+          tag: 0.7.5
         prometheus:
           endpoint: "http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090"
 #        distributor:
@@ -144,13 +144,13 @@ spec:
   source:
     path: chart/
     repoURL: https://github.com/keptn-contrib/argo-service.git
-    targetRevision: c44caa3
+    targetRevision: 0.9.3
     helm:
       releaseName: argo-service
       values: |
         image:
-          # tag: "0.9.1"
-          tag: "0.9.2-dev-PR-50"
+          tag: "0.9.3"
+#          tag: "0.9.2-dev-PR-50"
 #        distributor:
 #          image:
 #            tag: "0.10.0"
@@ -174,4 +174,4 @@ spec:
   source:
     path: deploy/
     repoURL: https://github.com/keptn-contrib/prometheus-service.git
-    targetRevision: 0.7.3
+    targetRevision: 0.7.5
