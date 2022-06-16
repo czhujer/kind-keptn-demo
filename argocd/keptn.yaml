@@ -18,7 +18,7 @@ spec:
   source:
     chart: keptn
     repoURL: https://charts.keptn.sh
-    targetRevision: 0.13.2
+    targetRevision: 0.13.6
     helm:
       values: |
         continuous-delivery:
@@ -66,7 +66,7 @@ spec:
   source:
     chart: helm-service
     repoURL: https://charts.keptn.sh
-    targetRevision: 0.13.2
+    targetRevision: 0.13.6
     helm:
       values: |
         fullnameOverride: "helm-service"
@@ -90,7 +90,7 @@ spec:
   source:
     chart: jmeter-service
     repoURL: https://charts.keptn.sh
-    targetRevision: 0.13.2
+    targetRevision: 0.13.6
     helm:
       releaseName: jmeter-service
 ---
@@ -123,7 +123,7 @@ spec:
           endpoint: "http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090"
 #        distributor:
 #          image:
-#            tag: "0.13.2"
+#            tag: "0.13.6"
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application

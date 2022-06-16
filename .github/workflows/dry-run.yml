@@ -25,12 +25,12 @@ on:
   pull_request:
     branches:
       - main
-  #    paths:
-  #      - .github/workflows/dry-run.yml
-  #      - argocd/**
-  #      - kind/**
-  #      - tests/e2e/**
-  #      - Makefile
+#    paths:
+#      - .github/workflows/dry-run.yml
+#      - argocd/**
+#      - kind/**
+#      - tests/e2e/**
+#      - Makefile
   push:
     branches-ignore:
       - main
