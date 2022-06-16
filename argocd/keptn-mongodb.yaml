@@ -20,6 +20,7 @@ spec:
     repoURL: https://charts.bitnami.com/bitnami
     targetRevision: 11.1.5
     helm:
+      releaseName: mongo
       values: |
         enabled: true
         host: mongodb:27017

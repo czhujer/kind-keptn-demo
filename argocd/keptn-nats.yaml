@@ -17,7 +17,7 @@ spec:
   project: system-keptn
   source:
     chart: nats
-    repoURL: https://nats-io.github.io/k8s/helm/charts/
+    repoURL: https://nats-io.github.io/k8s/helm/charts
     targetRevision: 0.7.5
     helm:
       values: |
