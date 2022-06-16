@@ -170,6 +170,7 @@ starboard-deploy:
 keptn-prepare-images:
 	# pull image locally
 	docker pull docker.io/bitnami/mongodb:4.4.9-debian-10-r0
+	docker pull docker.io/bitnami/mongodb-exporter:0.31.1-debian-10-r4
 	docker pull docker.io/keptn/distributor:$(KEPTN_VERSION)
 	docker pull docker.io/keptn/mongodb-datastore:$(KEPTN_VERSION)
 	docker pull docker.io/keptn/bridge2:$(KEPTN_VERSION)
@@ -180,9 +181,10 @@ keptn-prepare-images:
 	docker pull docker.io/keptn/helm-service:$(KEPTN_VERSION)
 	docker pull keptncontrib/prometheus-service:0.7.2
 	docker pull keptncontrib/argo-service:0.9.1
-	docker pull docker.io/keptn/distributor:0.10.0
+	# docker pull docker.io/keptn/distributor:0.10.0
 ifeq ($(TRIVY_IMAGE_CHECK), 1)
-	trivy image --severity=HIGH --exit-code=0 docker.io/bitnami/mongodb:4.4.9-debian-10-r0
+	trivy image --severity=HIGH --exit-code=0 docker.io/bitnami/mongodb:4.4.13-debian-10-r33
+	trivy image --severity=HIGH --exit-code=0 docker.io/bitnami/mongodb-exporter:0.31.1-debian-10-r4
 	trivy image --severity=HIGH --exit-code=1 docker.io/keptn/distributor:$(KEPTN_VERSION)
 	trivy image --severity=HIGH --exit-code=0 docker.io/keptn/mongodb-datastore:$(KEPTN_VERSION)
 	trivy image --severity=HIGH --exit-code=0 docker.io/keptn/bridge2:$(KEPTN_VERSION)
@@ -193,10 +195,11 @@ ifeq ($(TRIVY_IMAGE_CHECK), 1)
 	trivy image --severity=HIGH --exit-code=0 docker.io/keptn/helm-service:$(KEPTN_VERSION)
 	trivy image --severity=HIGH --exit-code=0 keptncontrib/prometheus-service:0.7.2
 	trivy image --severity=HIGH --exit-code=0 keptncontrib/argo-service:0.9.1
-	trivy image --severity=HIGH --exit-code=0 docker.io/keptn/distributor:0.10.0
+	# trivy image --severity=HIGH --exit-code=0 docker.io/keptn/distributor:0.10.0
 endif
 	# Load the image onto the cluster
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/bitnami/mongodb:4.4.9-debian-10-r0
+	kind load docker-image --name $(CLUSTER_NAME) docker.io/bitnami/mongodb-exporter:0.31.1-debian-10-r4
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:$(KEPTN_VERSION)
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/mongodb-datastore:$(KEPTN_VERSION)
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/bridge2:$(KEPTN_VERSION)
@@ -207,7 +210,7 @@ endif
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/helm-service:$(KEPTN_VERSION)
 	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/prometheus-service:0.7.2
 	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/argo-service:0.9.1
-	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:0.10.0
+	# kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:0.10.0
 
 .PHONY: keptn-delete
 keptn-delete:

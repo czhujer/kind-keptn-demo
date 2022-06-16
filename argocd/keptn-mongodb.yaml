@@ -24,9 +24,16 @@ spec:
     helm:
       # releaseName: mongo
       values: |
+        # enable monitoring
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+            interval: 60s
         # fix for mongodb name logic (because: bumped version or argo-cd rendering)
         fullnameOverride: "keptn-mongo"
         # values copied from keptn chart's values
+        # https://github.com/keptn/keptn/blob/0.13.6/installer/manifests/keptn/charts/control-plane/values.yaml#L1
         enabled: true
         host: mongodb:27017
         architecture: standalone

@@ -19,7 +19,9 @@ spec:
 #    chart: keptn
 #    repoURL: https://charts.keptn.sh
 #    targetRevision: 0.13.6
-    # temporary switch to forked chart
+    # temporary switch to forked chart because of old version of mongodb chart
+    # https://github.com/keptn/keptn/pull/7444/files
+    # https://github.com/keptn/keptn/pull/6539/files
     repoURL: https://github.com/czhujer/keptn-keptn
     targetRevision: pm-update-mongodb-chart-for-13-x-release
     path: installer/manifests/keptn
