@@ -25,12 +25,12 @@ on:
   pull_request:
     branches:
       - main
-#    paths:
-#      - .github/workflows/dry-run.yml
-#      - argocd/**
-#      - kind/**
-#      - tests/e2e/**
-#      - Makefile
+  #    paths:
+  #      - .github/workflows/dry-run.yml
+  #      - argocd/**
+  #      - kind/**
+  #      - tests/e2e/**
+  #      - Makefile
   push:
     branches-ignore:
       - main
@@ -53,11 +53,11 @@ jobs:
       - name: "prepare env: clone repo"
         uses: actions/checkout@v3
 
-#      - name: "prepare env: show vars"
-#        run: env
+      #      - name: "prepare env: show vars"
+      #        run: env
 
-#      - name: "debug: end workflow"
-#        run: "false"
+      #      - name: "debug: end workflow"
+      #        run: "false"
 
       - name: "prepare env: install make"
         run: |
@@ -109,8 +109,8 @@ jobs:
       - name: "prepare cluster: wait for argo-cd nginx init"
         run: sleep 15
 
-#      - name: "prepare cluster: install cert-manager"
-#        run: make cert-manager-deploy
+      #      - name: "prepare cluster: install cert-manager"
+      #        run: make cert-manager-deploy
 
       - name: "argo-cd: wait to ingress ready"
         run: kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx-controller
@@ -137,8 +137,8 @@ jobs:
       - name: "argo-cd: create projects"
         run: kubectl apply -f ${{ env.argocd_projects_dir }}
 
-#      - name: "argo-cd: install changed app's defs"
-#        run: ./scripts/detect_updated_argocd_apps.sh
+      #      - name: "argo-cd: install changed app's defs"
+      #        run: ./scripts/detect_updated_argocd_apps.sh
 
       - name: "argo-cd: install prometheus-stack-deploy"
         run: make prometheus-stack-deploy
@@ -152,45 +152,59 @@ jobs:
       - name: "argo-cd: show all apps"
         run: argocd app list ${{ env.argocd_params }}
 
-#      - name: run test-network test - assets
-#        run: make test-network-apply-assets
-#
-#      - name: run test-network test - wait to assets
-#        run: |
-#          kubectl wait -n test-network --timeout=2m --for=condition=available deployment client
-#          kubectl wait -n test-network --timeout=2m --for=condition=available deployment podinfo
-#
-#      - name: run test-network test - debug
-#        run: kubectl -n test-network get po,svc,cnp
-#
-#      - name: run test-network test - check
-#        run: |
-#          rs=$(make test-network-check-status)
-#          echo "$rs"
-#          echo "$rs" |grep "greetings from podinfo"
+      - name: "keptn: download cli"
+        run: curl -sL https://get.keptn.sh | bash
 
-#      - name: "e2e tests: install dependencies"
-#        run: |
-#          cd tests/e2e
-#          go mod vendor
-#          go env -w GO111MODULE=auto
-#
-#      - name: "e2e tests: run"
-#        id: runE2eTests
-#        run: |
-#          cd tests/e2e
-#          go test ./... -report-dir=./junit -v
-#
-#      - name: "e2e tests: debug info"
-#        if: failure() && steps.runE2eTests.outcome == 'failure'
-#        run: |
-#          kubectl get pods -A -o wide || true
-#          kubectl get svc -A || true
-#          kubectl get secrets -A || true
-#          kubectl get cnp -A || true
-#          kubectl get ccnp -A || true
-#          kubectl get issuers -A || true
-#          kubectl get certificates -A || true
+      - name: "keptn: set login (and check keptn api)"
+        run: make keptn-set-login
+
+      - name: "keptn: prepare helm chart for hello"
+        run: make keptn-helloserver-prepare-helm-charts
+
+      - name: run test-network test - assets
+        run: make test-network-apply-assets
+
+      - name: run test-network test - wait to assets
+        id: runNetTestWait
+        run: |
+          kubectl wait -n test-network --timeout=3m --for=condition=available deployment client
+          kubectl wait -n test-network --timeout=3m --for=condition=available deployment podinfo
+
+      - name: run test-network test - debug
+        if: failure() && steps.runNetTestWait.outcome == 'failure'
+        run: |
+          kubectl -n test-network get po,svc,cnp || true
+          kubectl -n test-network describe deployments/client || true
+          kubectl -n test-network describe rs -l app=client || true
+
+      - name: run test-network test - check
+        run: |
+          rs=$(make test-network-check-status)
+          echo "$rs"
+          echo "$rs" |grep "greetings from podinfo"
+
+      #      - name: "e2e tests: install dependencies"
+      #        run: |
+      #          cd tests/e2e
+      #          go mod vendor
+      #          go env -w GO111MODULE=auto
+      #
+      #      - name: "e2e tests: run"
+      #        id: runE2eTests
+      #        run: |
+      #          cd tests/e2e
+      #          go test ./... -report-dir=./junit -v
+
+      - name: "e2e tests: debug info"
+        if: failure() && steps.runE2eTests.outcome == 'failure'
+        run: |
+          kubectl get pods -A -o wide || true
+          kubectl get svc -A || true
+          kubectl get secrets -A || true
+          kubectl get cnp -A || true
+          kubectl get ccnp -A || true
+          kubectl get issuers -A || true
+          kubectl get certificates -A || true
 
 #      - name: Publish Test Report
 #        uses: mikepenz/action-junit-report@v3
