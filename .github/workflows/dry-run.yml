@@ -180,10 +180,10 @@ jobs:
 
       - name: "keptn: wait for deploy keptn services"
         id: keptnWaitToReady2
-        timeout-minutes: 30
+        timeout-minutes: 45
         run: |
           kubectl -n keptn wait --timeout=10m deployments --for=condition=available -l app.kubernetes.io/component=mongodb
-          kubectl -n keptn wait --timeout=30m deployments --for=condition=available -l argocd.argoproj.io/instance=keptn
+          kubectl -n keptn wait --timeout=45m deployments --for=condition=available -l argocd.argoproj.io/instance=keptn
 
       - name: "keptn: debug info"
         if: failure() && steps.keptnWaitToReady2.outcome == 'failure'
@@ -203,8 +203,20 @@ jobs:
       - name: "keptn: set login (and check keptn api)"
         run: make keptn-set-login
 
+      - name: "keptn: wait to roll-out bridge"
+        run: kubectl -n keptn rollout status --watch --timeout=5m  deployments.apps bridge
+
       - name: "keptn: prepare helm chart for hello"
         run: make keptn-helloserver-prepare-helm-charts
+
+      - name: "keptn: install podtato-head project & app"
+        run: make keptn-create-project-podtato-head
+
+      - name: "keptn: show projects"
+        run: keptn get projects
+
+      - name: "keptn: show services for podtato-head project"
+        run: keptn get service  --project=podtato-head
 
       - name: run test-network test - assets
         run: make test-network-apply-assets
