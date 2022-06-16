@@ -53,11 +53,11 @@ jobs:
       - name: "prepare env: clone repo"
         uses: actions/checkout@v3
 
-      #      - name: "prepare env: show vars"
-      #        run: env
+#      - name: "prepare env: show vars"
+#        run: env
 
-      #      - name: "debug: end workflow"
-      #        run: "false"
+#      - name: "debug: end workflow"
+#        run: "false"
 
       - name: "prepare env: install make"
         run: |
@@ -109,8 +109,8 @@ jobs:
       - name: "prepare cluster: wait for argo-cd nginx init"
         run: sleep 15
 
-      #      - name: "prepare cluster: install cert-manager"
-      #        run: make cert-manager-deploy
+#      - name: "prepare cluster: install cert-manager"
+#        run: make cert-manager-deploy
 
       - name: "argo-cd: wait to ingress ready"
         run: kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx-controller
@@ -137,8 +137,8 @@ jobs:
       - name: "argo-cd: create projects"
         run: kubectl apply -f ${{ env.argocd_projects_dir }}
 
-      #      - name: "argo-cd: install changed app's defs"
-      #        run: ./scripts/detect_updated_argocd_apps.sh
+#      - name: "argo-cd: install changed app's defs"
+#        run: ./scripts/detect_updated_argocd_apps.sh
 
       - name: "argo-cd: install prometheus-stack-deploy"
         run: make prometheus-stack-deploy
@@ -183,17 +183,17 @@ jobs:
           echo "$rs"
           echo "$rs" |grep "greetings from podinfo"
 
-      #      - name: "e2e tests: install dependencies"
-      #        run: |
-      #          cd tests/e2e
-      #          go mod vendor
-      #          go env -w GO111MODULE=auto
-      #
-      #      - name: "e2e tests: run"
-      #        id: runE2eTests
-      #        run: |
-      #          cd tests/e2e
-      #          go test ./... -report-dir=./junit -v
+#      - name: "e2e tests: install dependencies"
+#        run: |
+#          cd tests/e2e
+#          go mod vendor
+#          go env -w GO111MODULE=auto
+#
+#      - name: "e2e tests: run"
+#        id: runE2eTests
+#        run: |
+#          cd tests/e2e
+#          go test ./... -report-dir=./junit -v
 
       - name: "e2e tests: debug info"
         if: failure() && steps.runE2eTests.outcome == 'failure'
