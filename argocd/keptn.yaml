@@ -22,7 +22,7 @@ spec:
     # temporary switch to forked chart
     repoURL: https://github.com/czhujer/keptn-keptn
     targetRevision: pm-update-mongodb-chart-for-13-x
-    path: installer/manifests/keptn/charts/keptn
+    path: installer/manifests/keptn
     helm:
       values: |
         continuous-delivery:
