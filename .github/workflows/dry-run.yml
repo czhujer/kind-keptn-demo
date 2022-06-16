@@ -161,8 +161,10 @@ jobs:
         id: keptnWaitToReady1
         timeout-minutes: 30
         run: |
-          kubectl -n keptn wait --timeout=10m pod --for=condition=ready -l app=keptn-nats-cluster
-          kubectl -n keptn wait --timeout=10m deployments --for=condition=available -l app.kubernetes.io/component=mongodb
+          kubectl -n keptn wait --timeout=10m pod --for=condition=ready -l app=keptn-nats-cluster || \
+            kubectl -n keptn describe sts -l app=keptn-nats-cluster
+          kubectl -n keptn wait --timeout=10m deployments --for=condition=available -l app.kubernetes.io/component=mongodb || \
+            kubectl -n keptn describe deployments -l app.kubernetes.io/component=mongodb
 
       - name: "keptn: debug info (nats & mongodb)"
         if: failure() && steps.keptnWaitToReady1.outcome == 'failure'
