@@ -153,7 +153,9 @@ jobs:
         run: argocd app list ${{ env.argocd_params }}
 
       - name: "keptn: wait for deploy keptn services"
-        run: kubectl -n keptn wait --timeout=5m deployments --for=condition=available -l argocd.argoproj.io/instance=keptn
+        run:
+          kubectl -n keptn wait --timeout=5m deployments --for=condition=available -l argocd.argoproj.io/instance=keptn
+          kubectl -n keptn wait --timeout=5m sts --for=condition=available -l app=keptn-nats-cluster
 
       - name: "keptn: download cli"
         run: curl -sL https://get.keptn.sh | bash

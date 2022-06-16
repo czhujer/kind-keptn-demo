@@ -209,10 +209,29 @@ endif
 	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/argo-service:0.9.1
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:0.10.0
 
+.PHONY: keptn-delete
+keptn-delete:
+	kubectl -n argocd delete app keptn
+	kubectl -n argocd delete app keptn-argo-service
+	kubectl -n argocd delete app keptn-jmeter-service
+	kubectl -n argocd delete app keptn-prometheus-service
+	kubectl -n argocd delete app keptn-helm-service
+	kubectl -n argocd delete app keptn-prometheus-role
+	kubectl delete ns keptn -R
+
 .PHONY: keptn-deploy
 keptn-deploy:
+#	kubectl label --overwrite ns keptn \
+#      pod-security.kubernetes.io/enforce=baseline \
+#      pod-security.kubernetes.io/enforce-version=latest \
+#      pod-security.kubernetes.io/warn=restricted \
+#      pod-security.kubernetes.io/warn-version=latest \
+#      pod-security.kubernetes.io/audit=restricted \
+#      pod-security.kubernetes.io/audit-version=latest
+    #
 	kubectl -n argocd apply -f argocd/argo-rollouts.yaml
 	kubectl -n argocd apply -f argocd/projects/system-keptn.yaml
+	kubectl -n argocd apply -f argocd/keptn-nats.yaml
 	kubectl -n argocd apply -f argocd/keptn.yaml
 #	helm repo add keptn https://charts.keptn.sh
 #	helm upgrade --install \

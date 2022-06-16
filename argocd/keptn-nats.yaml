@@ -1,0 +1,29 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keptn-nats
+  namespace: argocd
+spec:
+  destination:
+    namespace: keptn
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: system-keptn
+  source:
+    chart: nats
+    repoURL: https://nats-io.github.io/k8s/helm/charts/
+    targetRevision: 0.7.5
+    helm:
+      values: |
+        nameOverride: keptn-nats-cluster
+        nats.cluster.replicas: 3
+        natsbox:
+          enabled: false
+        reloader:
+          enabled: false
