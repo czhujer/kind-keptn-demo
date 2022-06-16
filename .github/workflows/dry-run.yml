@@ -31,9 +31,9 @@ on:
 #      - kind/**
 #      - tests/e2e/**
 #      - Makefile
-  push:
-    branches-ignore:
-      - main
+#  push:
+#    branches-ignore:
+#      - main
 #    paths:
 #      - .github/workflows/dry-run.yml
 #      - argocd/**
@@ -170,6 +170,7 @@ jobs:
           kubectl -n keptn get deployments,sts || true
           kubectl -n keptn get pods -o wide || true
           kubectl -n keptn get svc || true
+          kubectl -n keptn get smon || true
 
       - name: "argo-cd: install keptn control plane (and sleep)"
         run: kubectl -n argocd apply -f argocd/keptn.yaml && sleep 10
@@ -186,6 +187,7 @@ jobs:
           kubectl -n keptn get deployments,sts || true
           kubectl -n keptn get pods -o wide || true
           kubectl -n keptn get svc || true
+          kubectl -n keptn get smon || true
 
       - name: "argo-cd: show all apps"
         if: always()
