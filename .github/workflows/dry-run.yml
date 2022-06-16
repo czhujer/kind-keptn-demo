@@ -157,12 +157,11 @@ jobs:
       - name: "argo-cd: install keptn-mongodb (and sleep)"
         run: kubectl -n argocd apply -f argocd/keptn-mongodb.yaml && sleep 10
 
-      - name: "keptn: wait for keptn nats & mongodb ready"
+      - name: "keptn: wait for keptn nats ready"
         id: keptnWaitToReady1
         timeout-minutes: 10
         run: |
           kubectl -n keptn wait --timeout=10m pod --for=condition=ready -l app=keptn-nats-cluster
-          kubectl -n keptn wait --timeout=10m deployments --for=condition=available -l app.kubernetes.io/component=mongodb
 
       - name: "keptn: debug info (nats & mongodb)"
         if: failure() && steps.keptnWaitToReady1.outcome == 'failure'
@@ -172,9 +171,10 @@ jobs:
           kubectl -n keptn get pv,pvc || true
           kubectl -n keptn get svc || true
           kubectl -n keptn get smon || true
-          kubectl -n keptn describe sts -l app=keptn-nats-cluster || true
-          kubectl -n keptn describe deployments -l app.kubernetes.io/component=mongodb || true
-          kubectl -n keptn describe pod -l app.kubernetes.io/component=mongodb || true
+#          kubectl -n keptn describe sts -l app=keptn-nats-cluster || true
+#          kubectl -n keptn describe deployments -l app.kubernetes.io/component=mongodb || true
+#          kubectl -n keptn describe pod -l app.kubernetes.io/component=mongodb || true
+
       - name: "argo-cd: install keptn control plane (and sleep)"
         run: kubectl -n argocd apply -f argocd/keptn.yaml && sleep 10
 
@@ -182,6 +182,7 @@ jobs:
         id: keptnWaitToReady2
         timeout-minutes: 30
         run: |
+          kubectl -n keptn wait --timeout=10m deployments --for=condition=available -l app.kubernetes.io/component=mongodb
           kubectl -n keptn wait --timeout=30m deployments --for=condition=available -l argocd.argoproj.io/instance=keptn
 
       - name: "keptn: debug info"
