@@ -26,7 +26,7 @@ spec:
         exporter:
           enabled: true
           serviceMonitor:
-            enabled: false
+            enabled: true
         # fix for name logic (because: bumped version or argo-cd rendering)
         nameOverride: keptn-nats-cluster
         # values from keptn chart
