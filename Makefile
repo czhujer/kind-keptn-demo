@@ -232,6 +232,7 @@ keptn-deploy:
 	kubectl -n argocd apply -f argocd/argo-rollouts.yaml
 	kubectl -n argocd apply -f argocd/projects/system-keptn.yaml
 	kubectl -n argocd apply -f argocd/keptn-nats.yaml
+	kubectl -n argocd apply -f argocd/keptn-mongodb.yaml
 	kubectl -n argocd apply -f argocd/keptn.yaml
 #	helm repo add keptn https://charts.keptn.sh
 #	helm upgrade --install \
