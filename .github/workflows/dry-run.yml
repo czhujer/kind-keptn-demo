@@ -147,7 +147,7 @@ jobs:
         run: make keptn-prepare-images keptn-deploy
 
       - name: "argo-cd: wait to sync new apps"
-        run: sleep 30
+        run: sleep 60
 
       - name: "argo-cd: show all apps"
         run: argocd app list ${{ env.argocd_params }}
