@@ -34,6 +34,12 @@ spec:
             dashboards:
               searchNamespace: ALL
             enableUniqueFilenames: true
+        prometheusOperator:
+          prometheusConfigReloader:
+            resources:
+              requests:
+                cpu:
+                  25m
         prometheus:
           enabled: true
           ingress:
@@ -46,7 +52,7 @@ spec:
             ruleSelectorNilUsesHelmValues: false
             resources:
               requests:
-                cpu: "50m"
+                cpu: 50m
         #    scrapeInterval: 5s
         #    scrapeTimeout: 5s
         #
