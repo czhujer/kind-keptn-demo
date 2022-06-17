@@ -197,7 +197,8 @@ jobs:
           kubectl -n keptn describe deployments/shipyard-controller || true
           echo "debug statistic service:"
           kubectl -n keptn describe deployments/statistics-service || true
-          kubectl -n keptn describe rs -l app.kubernetes.io/name: statistics-service || true
+          kubectl -n keptn describe rs -l app.kubernetes.io/name=statistics-service || true
+          kubectl -n keptn describe pod -l app.kubernetes.io/name=statistics-service || true
           echo "debug configuration service:"
           kubectl -n keptn describe persistentvolumeclaim/configuration-volume || true
 
