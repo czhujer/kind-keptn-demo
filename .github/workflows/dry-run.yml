@@ -188,12 +188,13 @@ jobs:
       - name: "keptn: debug info"
         if: failure() && steps.keptnWaitToReady2.outcome == 'failure'
         run: |
-          kubectl -n keptn get deployments,sts || true
-          kubectl -n keptn get pods -o wide || true
-          kubectl -n keptn get svc || true
-          kubectl -n keptn get smon || true
+          kubectl -n keptn get deployments,sts --show-kind=true || true
+          kubectl -n keptn get pods --show-kind=true -o wide || true
+          kubectl -n keptn get svc --show-kind=true || true
+          kubectl -n keptn get smon --show-kind=true || true
           kubectl -n keptn describe deployments/shipyard-controller || true
           kubectl -n keptn describe deployments/statistics-service || true
+          kubectl -n keptn describe rs -l app.kubernetes.io/name: statistics-service || true
 
       - name: "argo-cd: show all apps"
         if: always()
