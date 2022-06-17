@@ -92,7 +92,7 @@ jobs:
         run: make kind-install-crds
 
       - name: "prepare cluster: install cilium"
-        run: make cilium-install
+        run: make cilium-install-ci
 
       - name: "prepare cluster: show all pods"
         run: sleep 5 && kubectl get pods -A
@@ -142,6 +142,10 @@ jobs:
 
       - name: "argo-cd: install prometheus-stack-deploy"
         run: make prometheus-stack-deploy
+
+      - name: "fixture: decrease cpu requests for some workload"
+        run: |
+          kubectl -n kube-system scale deployment coredns --replicas=1
 
       - name: "argo-cd: keptn-prepare-images and install projects"
         run: |

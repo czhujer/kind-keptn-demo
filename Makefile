@@ -88,6 +88,17 @@ cilium-install:
 	   --namespace kube-system \
 	   --wait
 
+.PHONY: cilium-install-ci
+cilium-install-ci:
+	# Add the Cilium repo
+	helm repo add cilium https://helm.cilium.io/
+	# install/upgrade the chart
+	helm upgrade --install cilium cilium/cilium --version $(CILIUM_VERSION) \
+	   -f kind/kind-values-cilium.yaml \
+	   -f kind/kind-values-cilium-service-monitors.yaml \
+	   --namespace kube-system \
+	   --wait
+
 .PHONY: cert-manager-deploy
 cert-manager-deploy:
 	# prepare image(s)
