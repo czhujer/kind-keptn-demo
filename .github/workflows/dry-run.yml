@@ -151,7 +151,6 @@ jobs:
           sleep 5
           kubectl -n ingress-nginx delete pods -l app.kubernetes.io/component=controller
           kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx-controller
-          argocd ${{ env.argocd_params }} app set prometheus-stack -p prometheus.prometheusSpec.resources.requests.cpu=50m
 
       - name: "argo-cd: keptn-prepare-images and install projects"
         run: |
