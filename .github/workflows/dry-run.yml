@@ -198,7 +198,6 @@ jobs:
       - name: "keptn: debug info"
         if: failure() && steps.keptnWaitToReady2.outcome == 'failure'
         run: |
-          kubectl describe node/keptn-control-plane
           kubectl -n keptn get deployments,sts --show-kind=true || true
           kubectl -n keptn get pods --show-kind=true -o wide || true
           kubectl -n keptn get sc,pv,pvc  --show-kind=true || true
@@ -224,7 +223,15 @@ jobs:
         run: make keptn-set-login
 
       - name: "keptn: wait to roll-out bridge"
+        id: keptnWaitToReady3
         run: kubectl -n keptn rollout status --watch --timeout=5m  deployments.apps bridge
+
+      - name: "keptn: wait to roll-out bridge - debug info"
+        if: failure() && steps.keptnWaitToReady3.outcome == 'failure'
+        run: |
+          kubectl -n keptn get deployment bridge || true
+          kubectl -n keptn get deployment -l app.kubernetes.io/name=bridge || true
+          kubectl -n keptn describe pod -l app.kubernetes.io/name=bridge || true
 
       - name: "keptn: prepare helm chart for hello"
         run: make keptn-helloserver-prepare-helm-charts
@@ -295,3 +302,7 @@ jobs:
 #        with:
 #          comment_mode: off
 #          files: 'tests/e2e/**/junit_*.xml'
+
+      - name: "debug: kind node details"
+        if: always()
+        run: kubectl describe node/keptn-control-plane
