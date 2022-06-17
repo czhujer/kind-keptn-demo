@@ -150,10 +150,8 @@ jobs:
           argocd ${{ env.argocd_params }} app set nginx-ingress -p controller.resources.requests.cpu=25m
           sleep 5
           kubectl -n ingress-nginx delete pods -l app.kubernetes.io/component=controller
+          kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx-controller
           argocd ${{ env.argocd_params }} app set prometheus-stack -p prometheus.prometheusSpec.resources.requests.cpu=50m
-
-      - name: "fixtures: wait to ingress ready"
-        run: kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx-controller
 
       - name: "argo-cd: keptn-prepare-images and install projects"
         run: |
