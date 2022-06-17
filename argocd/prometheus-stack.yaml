@@ -44,6 +44,9 @@ spec:
             podMonitorSelectorNilUsesHelmValues: false
             serviceMonitorSelectorNilUsesHelmValues: false
             ruleSelectorNilUsesHelmValues: false
+            resources:
+              requests:
+                cpu: 50m
         #    scrapeInterval: 5s
         #    scrapeTimeout: 5s
         #
