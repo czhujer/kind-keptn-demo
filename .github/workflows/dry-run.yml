@@ -188,6 +188,7 @@ jobs:
       - name: "keptn: debug info"
         if: failure() && steps.keptnWaitToReady2.outcome == 'failure'
         run: |
+          kubectl describe node/keptn-control-plane
           kubectl -n keptn get deployments,sts --show-kind=true || true
           kubectl -n keptn get pods --show-kind=true -o wide || true
           kubectl -n keptn get sc,pv,pvc  --show-kind=true || true
