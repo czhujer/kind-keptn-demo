@@ -24,26 +24,15 @@ kind-create:
 ifeq ($(TRIVY_IMAGE_CHECK), 1)
 	trivy image --severity=HIGH --exit-code=0 "$(KIND_NODE_IMAGE)"
 endif
+	# change resources for control plane pods
+	# https://github.com/kubernetes/kubeadm/pull/2184/files
 	mkdir -p /tmp/kind/kubeadm-patches
-	cat <<EOF > /tmp/kind/kubeadm-patches/kube-apiserver.yaml
-	spec:
-	  containers:
-		- name: kube-apiserver
-		  resources:
-			requests:
-			  cpu: 100m
-	EOF
-
+	cp kind/kubeadm-patches/kube-apiserver.yaml > /tmp/kind/kubeadm-patches/kube-apiserver.yaml
+	#
 	kind --version
 	kind create cluster --name "$(CLUSTER_NAME)" \
  		--config="kind/kind-config.yaml" \
  		--image="$(KIND_NODE_IMAGE)"
-# for testing PSP
-#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/privileged-psp.yaml
-#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/baseline-psp.yaml
-#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/restricted-psp.yaml
-#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/kind/psp/cluster-roles.yaml
-#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/kind/psp/role-bindings.yaml
 # for more control planes, but no workers
 # kubectl taint nodes --all node-role.kubernetes.io/master- || true
 
