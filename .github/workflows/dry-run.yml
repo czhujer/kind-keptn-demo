@@ -180,10 +180,10 @@ jobs:
 
       - name: "keptn: wait for deploy keptn services"
         id: keptnWaitToReady2
-        timeout-minutes: 55
+        timeout-minutes: 15
         run: |
           kubectl -n keptn wait --timeout=10m deployments --for=condition=available -l app.kubernetes.io/component=mongodb
-          kubectl -n keptn wait --timeout=55m deployments --for=condition=available -l argocd.argoproj.io/instance=keptn
+          kubectl -n keptn wait --timeout=15m deployments --for=condition=available -l argocd.argoproj.io/instance=keptn
 
       - name: "keptn: debug info"
         if: failure() && steps.keptnWaitToReady2.outcome == 'failure'
@@ -192,6 +192,8 @@ jobs:
           kubectl -n keptn get pods -o wide || true
           kubectl -n keptn get svc || true
           kubectl -n keptn get smon || true
+          kubectl -n keptn describe deployments/shipyard-controller || true
+          kubectl -n keptn describe deployments/statistics-service || true
 
       - name: "argo-cd: show all apps"
         if: always()
