@@ -176,11 +176,11 @@ jobs:
       - name: "keptn: debug info (nats & mongodb)"
         if: failure() && steps.keptnWaitToReady1.outcome == 'failure'
         run: |
-          kubectl -n keptn get deployments,sts || true
-          kubectl -n keptn get pods -o wide || true
-          kubectl -n keptn get sc,pv,pvc || true
-          kubectl -n keptn get svc || true
-          kubectl -n keptn get smon || true
+          kubectl -n keptn get deployments,sts --show-kind=true || true
+          kubectl -n keptn get pods -o wide --show-kind=true || true
+          kubectl -n keptn get sc,pv,pvc --show-kind=true || true
+          kubectl -n keptn get svc --show-kind=true || true
+          kubectl -n keptn get smon --show-kind=true || true
 #          kubectl -n keptn describe sts -l app=keptn-nats-cluster || true
 #          kubectl -n keptn describe deployments -l app.kubernetes.io/component=mongodb || true
 #          kubectl -n keptn describe pod -l app.kubernetes.io/component=mongodb || true
@@ -200,7 +200,7 @@ jobs:
         run: |
           kubectl -n keptn get deployments,sts --show-kind=true || true
           kubectl -n keptn get pods --show-kind=true -o wide || true
-          kubectl -n keptn get sc,pv,pvc  --show-kind=true || true
+          kubectl -n keptn get sc,pv,pvc --show-kind=true || true
           kubectl -n keptn get svc --show-kind=true || true
           kubectl -n keptn get smon --show-kind=true || true
           echo "debug shipyard: "
@@ -263,7 +263,7 @@ jobs:
       - name: "run test-network test: debug"
         if: failure() && steps.runNetTestWait.outcome == 'failure'
         run: |
-          kubectl -n test-network get po,svc,cnp || true
+          kubectl -n test-network get po,svc,cnp --show-kind=true || true
           kubectl -n test-network describe deployments/client || true
           kubectl -n test-network describe rs -l app=client || true
 
@@ -282,13 +282,14 @@ jobs:
       - name: "e2e tests: debug info"
         if: failure() && steps.runE2eTests.outcome == 'failure'
         run: |
-          kubectl get pods -A -o wide || true
-          kubectl get svc -A || true
-          kubectl get secrets -A || true
-          kubectl get cnp -A || true
-          kubectl get ccnp -A || true
-          kubectl get issuers -A || true
-          kubectl get certificates -A || true
+          kubectl get pods -A -o wide --show-kind=true || true
+          kubectl get svc -A --show-kind=true || true
+          kubectl get secrets -A --show-kind=true || true
+          kubectl get cnp -A --show-kind=true || true
+          kubectl get ccnp -A --show-kind=true || true
+          kubectl get issuers -A --show-kind=true || true
+          kubectl get certificates -A --show-kind=true || true
+          kubectl get smon -A --show-kind=true || true
 
 #      - name: Publish Test Report
 #        uses: mikepenz/action-junit-report@v3
@@ -310,6 +311,8 @@ jobs:
           kubectl -n podtato-head-prod get deployment || true
           kubectl -n podtato-head-dev get pods || true
           kubectl -n podtato-head-prod get pods || true
+          kubectl -n podtato-head-dev get smon || true
+          kubectl -n podtato-head-prod get smon || true
 
       - name: "debug: kind node details"
         if: always()
