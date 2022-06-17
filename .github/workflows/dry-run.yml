@@ -8,6 +8,7 @@ env:
   argocd_projects_dir: "argocd/projects"
   go_version: '>=1.18.0'
   ACK_GINKGO_DEPRECATIONS: "1.16.5"
+  KEPTN_VERSION: "0.13.6"
 
 on:
   workflow_dispatch:
@@ -149,7 +150,7 @@ jobs:
           kubectl -n kube-system patch deployment coredns --patch '{"spec": {"template": {"spec": {"containers": [{"name": "coredns", "resources": {"requests": {"cpu": "25m"}}}]}}}}'
           argocd ${{ env.argocd_params }} app set nginx-ingress -p controller.resources.requests.cpu=25m
           sleep 5
-          kubectl -n ingress-nginx delete pods -l app.kubernetes.io/component=controller
+          # kubectl -n ingress-nginx delete pods -l app.kubernetes.io/component=controller
           kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx-controller
 
       - name: "argo-cd: keptn-prepare-images and install projects"
