@@ -24,6 +24,16 @@ kind-create:
 ifeq ($(TRIVY_IMAGE_CHECK), 1)
 	trivy image --severity=HIGH --exit-code=0 "$(KIND_NODE_IMAGE)"
 endif
+	mkdir -p /tmp/kind/kubeadm-patches
+	cat <<EOF > /tmp/kind/kubeadm-patches/kube-apiserver.yaml
+	spec:
+	  containers:
+		- name: kube-apiserver
+		  resources:
+			requests:
+			  cpu: 100m
+	EOF
+
 	kind --version
 	kind create cluster --name "$(CLUSTER_NAME)" \
  		--config="kind/kind-config.yaml" \
