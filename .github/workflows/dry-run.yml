@@ -168,7 +168,7 @@ jobs:
         run: |
           kubectl -n keptn get deployments,sts || true
           kubectl -n keptn get pods -o wide || true
-          kubectl -n keptn get pv,pvc || true
+          kubectl -n keptn get sc,pv,pvc || true
           kubectl -n keptn get svc || true
           kubectl -n keptn get smon || true
 #          kubectl -n keptn describe sts -l app=keptn-nats-cluster || true
@@ -190,11 +190,16 @@ jobs:
         run: |
           kubectl -n keptn get deployments,sts --show-kind=true || true
           kubectl -n keptn get pods --show-kind=true -o wide || true
+          kubectl -n keptn get sc,pv,pvc  --show-kind=true || true
           kubectl -n keptn get svc --show-kind=true || true
           kubectl -n keptn get smon --show-kind=true || true
+          echo "debug shipyard: "
           kubectl -n keptn describe deployments/shipyard-controller || true
+          echo "debug statistic service:"
           kubectl -n keptn describe deployments/statistics-service || true
           kubectl -n keptn describe rs -l app.kubernetes.io/name: statistics-service || true
+          echo "debug configuration service:"
+          kubectl -n keptn describe persistentvolumeclaim/configuration-volume || true
 
       - name: "argo-cd: show all apps"
         if: always()
