@@ -27,7 +27,7 @@ endif
 	# change resources for control plane pods
 	# https://github.com/kubernetes/kubeadm/pull/2184/files
 	mkdir -p /tmp/kind/kubeadm-patches
-	cp kind/kubeadm-patches/kube-apiserver.yaml > /tmp/kind/kubeadm-patches/kube-apiserver.yaml
+	cp kind/kubeadm-patches/kube-apiserver.yaml /tmp/kind/kubeadm-patches/kube-apiserver.yaml
 	#
 	kind --version
 	kind create cluster --name "$(CLUSTER_NAME)" \
