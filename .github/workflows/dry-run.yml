@@ -143,7 +143,7 @@ jobs:
       - name: "argo-cd: install prometheus-stack-deploy"
         run: make prometheus-stack-deploy
 
-      - name: "fixture: decrease cpu requests for some workload"
+      - name: "fixtures: decrease cpu requests for some workload"
         run: |
           kubectl -n kube-system scale deployment coredns --replicas=1
           kubectl -n kube-system patch deployment coredns --patch '{"spec": {"template": {"spec": {"containers": [{"name": "coredns", "resources": {"requests": {"cpu": "25m"}}}]}}}}'
@@ -151,6 +151,9 @@ jobs:
           sleep 5
           kubectl -n ingress-nginx delete pods -l app.kubernetes.io/component=controller
           argocd ${{ env.argocd_params }} app set prometheus-stack -p prometheus.prometheusSpec.resources.requests.cpu=50m
+
+      - name: "fixtures: wait to ingress ready"
+        run: kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx-controller
 
       - name: "argo-cd: keptn-prepare-images and install projects"
         run: |
