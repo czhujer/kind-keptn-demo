@@ -242,29 +242,29 @@ jobs:
         run: keptn get projects
 
       - name: "keptn: show services for podtato-head project"
-        run: keptn get service  --project=podtato-head
+        run: keptn get service --project=podtato-head
 
-      - name: run test-network test - assets
+      - name: "run test-network test: create assets"
         run: make test-network-apply-assets
 
-      - name: run test-network test - wait to assets
+      - name: "run test-network test: wait to assets"
         id: runNetTestWait
         run: |
           kubectl wait -n test-network --timeout=3m --for=condition=available deployment client
           kubectl wait -n test-network --timeout=3m --for=condition=available deployment podinfo
 
-      - name: run test-network test - debug
+      - name: "run test-network test - (double) check"
+        run: |
+          rs=$(make test-network-check-status)
+          echo "$rs"
+          echo "$rs" |grep "greetings from podinfo"
+
+      - name: "run test-network test: debug"
         if: failure() && steps.runNetTestWait.outcome == 'failure'
         run: |
           kubectl -n test-network get po,svc,cnp || true
           kubectl -n test-network describe deployments/client || true
           kubectl -n test-network describe rs -l app=client || true
-
-      - name: run test-network test - check
-        run: |
-          rs=$(make test-network-check-status)
-          echo "$rs"
-          echo "$rs" |grep "greetings from podinfo"
 
 #      - name: "e2e tests: install dependencies"
 #        run: |
@@ -302,6 +302,14 @@ jobs:
 #          comment_mode: off
 #          files: 'tests/e2e/**/junit_*.xml'
 
+      - name: "keptn: show status of podtato-head"
+        if: always()
+        run: |
+          kubectl -n podtato-head-dev get deployment || true
+          kubectl -n podtato-head-prod get deployment || true
+          kubectl -n podtato-head-dev get pods || true
+          kubectl -n podtato-head-prod get pods || true
+
       - name: "debug: kind node details"
         if: always()
-        run: kubectl describe node/keptn-control-plane
+        run: kubectl describe node
