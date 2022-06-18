@@ -2,16 +2,17 @@ package keptn
 
 /* docs
 https://github.com/kubernetes/kubernetes/blob/v1.23.7/test/e2e/apps/statefulset.go
+https://github.com/kubernetes/kubernetes/blob/v1.23.7/test/e2e/framework/deployment/wait.go
 k8s.ovn.org/pod-networks
 */
 
 import (
-	//cmFramework "github.com/cert-manager/cert-manager/test/e2e/framework"
 	"context"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubernetes/test/e2e/framework"
+	e2edeployment "k8s.io/kubernetes/test/e2e/framework/deployment"
 	e2epod "k8s.io/kubernetes/test/e2e/framework/pod"
 	e2estatefulset "k8s.io/kubernetes/test/e2e/framework/statefulset"
 )
@@ -24,7 +25,6 @@ const (
 
 var (
 	f = framework.NewDefaultFramework(frameworkName)
-	//cmFw = cmFramework.NewDefaultFramework(frameworkName)
 )
 
 var _ = ginkgo.Describe("e2e keptn", func() {
@@ -50,6 +50,20 @@ var _ = ginkgo.Describe("e2e keptn", func() {
 			framework.ExpectNoError(err)
 
 			e2estatefulset.WaitForRunning(f.ClientSet, 1, 1, ss)
+		})
+	})
+
+	var _ = ginkgo.Describe("mongodb server", func() {
+		ginkgo.It("should running", func() {
+			td, err := f.ClientSet.AppsV1().Deployments(keptnNamespace).Get(context.TODO(), "keptn-mongo", metav1.GetOptions{})
+			framework.ExpectNoError(err)
+
+			// Wait for it to be updated to revision 1
+			err = e2edeployment.WaitForDeploymentRevisionAndImage(f.ClientSet, keptnNamespace, "keptn-mongo", "1", "docker.io/bitnami/mongodb")
+			framework.ExpectNoError(err)
+
+			err = e2edeployment.WaitForDeploymentComplete(f.ClientSet, td)
+			framework.ExpectNoError(err)
 		})
 	})
 

@@ -35,6 +35,7 @@ require (
 	github.com/cert-manager/cert-manager v1.8.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
+	k8s.io/apimachinery v0.24.1
 	k8s.io/klog v1.0.0
 	k8s.io/kubernetes v1.24.1
 )
@@ -158,7 +159,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/api v0.24.1 // indirect
 	k8s.io/apiextensions-apiserver v0.24.1 // indirect
-	k8s.io/apimachinery v0.24.1 // indirect
 	k8s.io/apiserver v0.24.1 // indirect
 	k8s.io/client-go v0.24.1 // indirect
 	k8s.io/cloud-provider v0.24.1 // indirect
