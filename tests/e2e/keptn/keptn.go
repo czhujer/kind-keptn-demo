@@ -21,7 +21,7 @@ const (
 	keptnNamespace   string = "keptn"
 	keptnMinPods     int32  = 12
 	frameworkName    string = "keptn"
-	mongodbImageName string = "mongodb:4.4.13-debian-10-r33"
+	mongodbImageName string = "docker.io/bitnami/mongodb:4.4.13-debian-10-r33"
 )
 
 var (
