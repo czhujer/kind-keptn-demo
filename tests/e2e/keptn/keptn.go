@@ -1,24 +1,30 @@
 package keptn
 
+/* docs
+https://github.com/kubernetes/kubernetes/blob/v1.23.7/test/e2e/apps/statefulset.go
+k8s.ovn.org/pod-networks
+*/
+
 import (
-	cmFramework "github.com/cert-manager/cert-manager/test/e2e/framework"
+	//cmFramework "github.com/cert-manager/cert-manager/test/e2e/framework"
+	"context"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubernetes/test/e2e/framework"
 	e2epod "k8s.io/kubernetes/test/e2e/framework/pod"
+	e2estatefulset "k8s.io/kubernetes/test/e2e/framework/statefulset"
 )
 
 const (
-	//podNetworkAnnotation = "k8s.ovn.org/pod-networks"
-	//agnhostImage         = "k8s.gcr.io/e2e-test-images/agnhost:2.26"
 	keptnNamespace string = "keptn"
 	keptnMinPods   int32  = 12
 	frameworkName  string = "keptn"
 )
 
 var (
-	f    = framework.NewDefaultFramework(frameworkName)
-	cmFw = cmFramework.NewDefaultFramework(frameworkName)
+	f = framework.NewDefaultFramework(frameworkName)
+	//cmFw = cmFramework.NewDefaultFramework(frameworkName)
 )
 
 var _ = ginkgo.Describe("e2e keptn", func() {
@@ -38,7 +44,16 @@ var _ = ginkgo.Describe("e2e keptn", func() {
 	//
 	//})
 
-	var _ = ginkgo.Describe("--> Control Plane", func() {
+	var _ = ginkgo.Describe("nats server", func() {
+		ginkgo.It("should running", func() {
+			ss, err := f.ClientSet.AppsV1().StatefulSets(keptnNamespace).Get(context.TODO(), "keptn-nats-cluster", metav1.GetOptions{})
+			framework.ExpectNoError(err)
+
+			e2estatefulset.WaitForRunning(f.ClientSet, 1, 1, ss)
+		})
+	})
+
+	var _ = ginkgo.Describe("Control Plane", func() {
 		ginkgo.It("should pods running", func() {
 			str := framework.RunKubectlOrDie(keptnNamespace, "get", "pods")
 			gomega.Expect(str).Should(gomega.MatchRegexp("api-gateway-nginx-"))
