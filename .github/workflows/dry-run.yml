@@ -267,17 +267,17 @@ jobs:
           kubectl -n test-network describe deployments/client || true
           kubectl -n test-network describe rs -l app=client || true
 
-#      - name: "e2e tests: install dependencies"
-#        run: |
-#          cd tests/e2e
-#          go mod vendor
-#          go env -w GO111MODULE=auto
-#
-#      - name: "e2e tests: run"
-#        id: runE2eTests
-#        run: |
-#          cd tests/e2e
-#          go test ./... -report-dir=./junit -v
+      - name: "e2e tests: install dependencies"
+        run: |
+          cd tests/e2e
+          go mod vendor
+          go env -w GO111MODULE=auto
+
+      - name: "e2e tests: run"
+        id: runE2eTests
+        run: |
+          cd tests/e2e
+          go test ./... -report-dir=./junit -v
 
       - name: "e2e tests: debug info"
         if: failure() && steps.runE2eTests.outcome == 'failure'
@@ -291,18 +291,18 @@ jobs:
           kubectl get certificates -A --show-kind=true || true
           kubectl get smon -A --show-kind=true || true
 
-#      - name: Publish Test Report
-#        uses: mikepenz/action-junit-report@v3
-#        if: always()
-#        with:
-#          report_paths: 'tests/e2e/junit/*.xml'
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always()
+        with:
+          report_paths: 'tests/e2e/junit/*.xml'
 
-#      - name: Publish Test Results
-#        uses: EnricoMi/publish-unit-test-result-action/composite@v1
-#        if: always()
-#        with:
-#          comment_mode: off
-#          files: 'tests/e2e/**/junit_*.xml'
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        if: always()
+        with:
+          comment_mode: off
+          files: 'tests/e2e/**/junit_*.xml'
 
       - name: "keptn: show status of podtato-head"
         if: always()
