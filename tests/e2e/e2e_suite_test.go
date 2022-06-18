@@ -3,8 +3,6 @@ package e2e
 import (
 	"flag"
 	"fmt"
-	cmFramework "github.com/cert-manager/cert-manager/test/e2e/framework"
-	cmAddon "github.com/cert-manager/cert-manager/test/e2e/framework/addon"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"
 	"github.com/onsi/ginkgo/reporters"
@@ -23,10 +21,6 @@ import (
 
 const kubeconfigEnvVar = "KUBECONFIG"
 
-var (
-	cfg = cmFramework.DefaultConfig
-)
-
 // handleFlags sets up all flags and parses the command line.
 func handleFlags() {
 	e2econfig.CopyFlags(e2econfig.Flags, flag.CommandLine)
@@ -37,7 +31,6 @@ func handleFlags() {
 
 // required due to go1.13 issue: https://github.com/onsi/ginkgo/issues/602
 func TestMain(m *testing.M) {
-	var err error
 	var kubeconfig string
 
 	// k8s.io/kubernetes/test/e2e/framework requires env KUBECONFIG to be set
@@ -52,25 +45,6 @@ func TestMain(m *testing.M) {
 
 	// Register test flags, then parse flags.
 	handleFlags()
-
-	// Register flags for CM
-	cmFramework.DefaultConfig.KubeConfig = kubeconfig
-
-	cmAddon.InitGlobals(cfg)
-
-	err = cmAddon.ProvisionGlobals(cfg)
-	if err != nil {
-		framework.Failf("Error provisioning global addons: %v", err)
-	}
-
-	cmAddon.InitGlobals(cfg)
-
-	err = cmAddon.SetupGlobals(cfg)
-	if err != nil {
-		framework.Failf("Error configuring global addons: %v", err)
-	}
-
-	// end of registering CM stuff
 
 	if framework.TestContext.ListImages {
 		for _, v := range image.GetImageConfigs() {
@@ -92,11 +66,6 @@ func TestMain(m *testing.M) {
 		testfiles.AddFileSource(testfiles.RootFileSource{Root: framework.TestContext.RepoRoot})
 	}
 
-	// Enable bindata file lookup as fallback.
-	//testfiles.AddFileSource(testfiles.BindataFileSource{
-	//	Asset:      generated.Asset,
-	//	AssetNames: generated.AssetNames,
-	//})
 	os.Exit(m.Run())
 }
 
