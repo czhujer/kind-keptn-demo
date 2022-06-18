@@ -28,6 +28,7 @@ var (
 )
 
 var _ = ginkgo.Describe("e2e keptn", func() {
+	f.SkipNamespaceCreation = true
 
 	//ginkgo.BeforeEach(func() {
 	//	ginkgo.By("Waiting to ketpn's pods ready")
