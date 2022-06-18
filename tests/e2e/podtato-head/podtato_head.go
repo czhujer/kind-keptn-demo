@@ -50,7 +50,7 @@ var _ = ginkgo.Describe("e2e podtato-head", func() {
 
 	var _ = ginkgo.Describe("podtato-head deployments", func() {
 		ginkgo.It("podtato-head deployment in dev env should running", func() {
-			td, err := f.ClientSet.AppsV1().Deployments(keptnNamespace).Get(context.TODO(), "podtato-head-dev", metav1.GetOptions{})
+			td, err := f.ClientSet.AppsV1().Deployments("podtato-head-dev").Get(context.TODO(), "helloservice", metav1.GetOptions{})
 			framework.ExpectNoError(err)
 
 			// Wait for it to be updated to revision 1
@@ -62,7 +62,7 @@ var _ = ginkgo.Describe("e2e podtato-head", func() {
 		})
 
 		//ginkgo.It("podtato-head deployment in prod env should running", func() {
-		//	td, err := f.ClientSet.AppsV1().Deployments(keptnNamespace).Get(context.TODO(), "podtato-head-prod", metav1.GetOptions{})
+		//	td, err := f.ClientSet.AppsV1().Deployments("podtato-head-prod").Get(context.TODO(), "helloservice", metav1.GetOptions{})
 		//	framework.ExpectNoError(err)
 		//
 		//	// Wait for it to be updated to revision 1
@@ -72,6 +72,9 @@ var _ = ginkgo.Describe("e2e podtato-head", func() {
 		//	err = e2edeployment.WaitForDeploymentComplete(f.ClientSet, td)
 		//	framework.ExpectNoError(err)
 		//})
+
+		// TODO: add tests for service monitor
+
 	})
 
 })

@@ -57,6 +57,7 @@ var _ = ginkgo.Describe("e2e keptn", func() {
 
 	var _ = ginkgo.Describe("Control Plane", func() {
 		ginkgo.It("keptn control plane should have pods running", func() {
+			// TODO: rewrite get pods for getting over clientSet
 			str := framework.RunKubectlOrDie(keptnNamespace, "get", "pods")
 			gomega.Expect(str).Should(gomega.MatchRegexp("api-gateway-nginx-"))
 			gomega.Expect(str).Should(gomega.MatchRegexp("api-service-"))
@@ -71,7 +72,7 @@ var _ = ginkgo.Describe("e2e keptn", func() {
 			gomega.Expect(str).Should(gomega.MatchRegexp("statistics-service-"))
 			gomega.Expect(str).Should(gomega.MatchRegexp("statistics-service-"))
 
-			ginkgo.By("Waiting to ketpn's pods ready")
+			ginkgo.By("Waiting to keptn's pods ready")
 			err := e2epod.WaitForPodsRunningReady(f.ClientSet, keptnNamespace, keptnMinPods, 0, framework.PodStartShortTimeout, make(map[string]string))
 			framework.ExpectNoError(err)
 		})
