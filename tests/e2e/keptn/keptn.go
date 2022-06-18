@@ -18,9 +18,10 @@ import (
 )
 
 const (
-	keptnNamespace string = "keptn"
-	keptnMinPods   int32  = 12
-	frameworkName  string = "keptn"
+	keptnNamespace   string = "keptn"
+	keptnMinPods     int32  = 12
+	frameworkName    string = "keptn"
+	mongodbImageName string = "mongodb:4.4.13-debian-10-r33"
 )
 
 var (
@@ -60,7 +61,7 @@ var _ = ginkgo.Describe("e2e keptn", func() {
 			framework.ExpectNoError(err)
 
 			// Wait for it to be updated to revision 1
-			err = e2edeployment.WaitForDeploymentRevisionAndImage(f.ClientSet, keptnNamespace, "keptn-mongo", "1", "docker.io/bitnami/mongodb")
+			err = e2edeployment.WaitForDeploymentRevisionAndImage(f.ClientSet, keptnNamespace, "keptn-mongo", "1", mongodbImageName)
 			framework.ExpectNoError(err)
 
 			err = e2edeployment.WaitForDeploymentComplete(f.ClientSet, td)
