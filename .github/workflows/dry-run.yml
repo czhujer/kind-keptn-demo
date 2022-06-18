@@ -279,6 +279,13 @@ jobs:
           cd tests/e2e
           go test ./... -report-dir=./junit -v
 
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        if: always()
+        with:
+          comment_mode: off
+          files: 'tests/e2e/**/junit_*.xml'
+
       - name: "e2e tests: debug info"
         if: failure() && steps.runE2eTests.outcome == 'failure'
         run: |
@@ -290,13 +297,6 @@ jobs:
           kubectl get issuers -A --show-kind=true || true
           kubectl get certificates -A --show-kind=true || true
           kubectl get smon -A --show-kind=true || true
-
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v1
-        if: always()
-        with:
-          comment_mode: off
-          files: 'tests/e2e/**/junit_*.xml'
 
       - name: "keptn: show status of podtato-head"
         if: always()
