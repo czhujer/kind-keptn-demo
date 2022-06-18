@@ -291,12 +291,6 @@ jobs:
           kubectl get certificates -A --show-kind=true || true
           kubectl get smon -A --show-kind=true || true
 
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v3
-        if: always()
-        with:
-          report_paths: 'tests/e2e/junit/*.xml'
-
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action/composite@v1
         if: always()
