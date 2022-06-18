@@ -15,7 +15,6 @@ import (
 	"k8s.io/kubernetes/test/e2e/framework"
 	e2edeployment "k8s.io/kubernetes/test/e2e/framework/deployment"
 	e2epod "k8s.io/kubernetes/test/e2e/framework/pod"
-	e2estatefulset "k8s.io/kubernetes/test/e2e/framework/statefulset"
 )
 
 const (
@@ -46,14 +45,14 @@ var _ = ginkgo.Describe("e2e keptn", func() {
 	//
 	//})
 
-	var _ = ginkgo.Describe("nats server", func() {
-		ginkgo.It("should running", func() {
-			ss, err := f.ClientSet.AppsV1().StatefulSets(keptnNamespace).Get(context.TODO(), "keptn-nats-cluster", metav1.GetOptions{})
-			framework.ExpectNoError(err)
-
-			e2estatefulset.WaitForRunning(f.ClientSet, 1, 1, ss)
-		})
-	})
+	//var _ = ginkgo.Describe("nats server", func() {
+	//	ginkgo.It("should running", func() {
+	//		ss, err := f.ClientSet.AppsV1().StatefulSets(keptnNamespace).Get(context.TODO(), "keptn-nats-cluster", metav1.GetOptions{})
+	//		framework.ExpectNoError(err)
+	//
+	//		e2estatefulset.WaitForRunning(f.ClientSet, 1, 1, ss)
+	//	})
+	//})
 
 	var _ = ginkgo.Describe("mongodb server", func() {
 		ginkgo.It("should running", func() {
