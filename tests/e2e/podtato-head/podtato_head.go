@@ -21,7 +21,7 @@ const (
 	keptnMinPods         int32  = 12
 	podtatoheadMinPods   int32  = 12
 	frameworkName        string = "podtatoHead"
-	podtatoheadImageName string = "ghcr.io/podtato-head/podtatoserver:v0.1.2"
+	podtatoheadImageName string = "ghcr.io/podtato-head/podtatoserver:v0.1.1"
 )
 
 var f = framework.NewDefaultFramework(frameworkName)
