@@ -33,7 +33,7 @@ var _ = ginkgo.Describe("e2e keptn", func() {
 	//})
 
 	var _ = ginkgo.Describe("nats server", func() {
-		ginkgo.It("should running", func() {
+		ginkgo.It("nats server should running", func() {
 			ss, err := f.ClientSet.AppsV1().StatefulSets(keptnNamespace).Get(context.TODO(), "keptn-nats-cluster", metav1.GetOptions{})
 			framework.ExpectNoError(err)
 
@@ -42,7 +42,7 @@ var _ = ginkgo.Describe("e2e keptn", func() {
 	})
 
 	var _ = ginkgo.Describe("mongodb server", func() {
-		ginkgo.It("should running", func() {
+		ginkgo.It("mongodb server should running", func() {
 			td, err := f.ClientSet.AppsV1().Deployments(keptnNamespace).Get(context.TODO(), "keptn-mongo", metav1.GetOptions{})
 			framework.ExpectNoError(err)
 
@@ -56,7 +56,7 @@ var _ = ginkgo.Describe("e2e keptn", func() {
 	})
 
 	var _ = ginkgo.Describe("Control Plane", func() {
-		ginkgo.It("should pods running", func() {
+		ginkgo.It("keptn control plane should have pods running", func() {
 			str := framework.RunKubectlOrDie(keptnNamespace, "get", "pods")
 			gomega.Expect(str).Should(gomega.MatchRegexp("api-gateway-nginx-"))
 			gomega.Expect(str).Should(gomega.MatchRegexp("api-service-"))
