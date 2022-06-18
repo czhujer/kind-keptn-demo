@@ -273,6 +273,9 @@ jobs:
           go mod vendor
           go env -w GO111MODULE=auto
 
+      - name: "e2e tests: list"
+        run: go list ./...
+
       - name: "e2e tests: run"
         id: runE2eTests
         run: |
