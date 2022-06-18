@@ -1,0 +1,52 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keptn-mongodb
+  namespace: argocd
+spec:
+  destination:
+    namespace: keptn
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: system-keptn
+  source:
+    # 11.1.5
+    # https://github.com/bitnami/charts/tree/2c930401b1cb5774eb4c159491280d54fe14e9a7/bitnami/mongodb
+    chart: mongodb
+    repoURL: https://charts.bitnami.com/bitnami
+    targetRevision: 11.1.5
+    helm:
+      # releaseName: mongo
+      values: |
+        # enable monitoring
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+            interval: 60s
+        # fix for mongodb name logic (because: bumped version or argo-cd rendering)
+        fullnameOverride: "keptn-mongo"
+        # values copied from keptn chart's values
+        # https://github.com/keptn/keptn/blob/0.13.6/installer/manifests/keptn/charts/control-plane/values.yaml#L1
+        enabled: true
+        host: mongodb:27017
+        architecture: standalone
+        service:
+          nameOverride: 'mongo'
+          port: 27017
+        auth:
+          database: 'keptn'
+          existingSecret: 'mongodb-credentials' # If the password and rootPassword values below are used, remove this field.
+          username: 'keptn'
+          password: null
+          rootUser: 'admin'
+          rootPassword: null
+          bridgeAuthDatabase: 'keptn'
+        external:
+          connectionString:

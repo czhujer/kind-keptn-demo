@@ -8,6 +8,7 @@ env:
   argocd_projects_dir: "argocd/projects"
   go_version: '>=1.18.0'
   ACK_GINKGO_DEPRECATIONS: "1.16.5"
+  KEPTN_VERSION: "0.13.6"
 
 on:
   workflow_dispatch:
@@ -31,9 +32,9 @@ on:
 #      - kind/**
 #      - tests/e2e/**
 #      - Makefile
-  push:
-    branches-ignore:
-      - main
+#  push:
+#    branches-ignore:
+#      - main
 #    paths:
 #      - .github/workflows/dry-run.yml
 #      - argocd/**
@@ -92,7 +93,7 @@ jobs:
         run: make kind-install-crds
 
       - name: "prepare cluster: install cilium"
-        run: make cilium-install
+        run: make cilium-install-ci
 
       - name: "prepare cluster: show all pods"
         run: sleep 5 && kubectl get pods -A
@@ -143,64 +144,173 @@ jobs:
       - name: "argo-cd: install prometheus-stack-deploy"
         run: make prometheus-stack-deploy
 
-      - name: "argo-cd: install keptn"
-        run: make keptn-prepare-images keptn-deploy
+      - name: "fixtures: decrease cpu requests for some workload"
+        run: |
+          kubectl -n kube-system scale deployment coredns --replicas=1
+          kubectl -n kube-system patch deployment coredns --patch '{"spec": {"template": {"spec": {"containers": [{"name": "coredns", "resources": {"requests": {"cpu": "25m"}}}]}}}}'
+          argocd ${{ env.argocd_params }} app set nginx-ingress -p controller.resources.requests.cpu=25m
+          sleep 5
+          # kubectl -n ingress-nginx delete pods -l app.kubernetes.io/component=controller
+          kubectl wait -n ingress-nginx --timeout=2m --for=condition=available deployment nginx-ingress-ingress-nginx-controller
 
-      - name: "argo-cd: wait to sync new apps"
-        run: sleep 15
+      - name: "argo-cd: keptn-prepare-images and install projects"
+        run: |
+          make keptn-prepare-images
+          kubectl -n argocd apply -f argocd/projects/system-keptn.yaml
+
+      - name: "argo-cd: install argo-rollouts (and sleep)"
+        run: kubectl -n argocd apply -f argocd/argo-rollouts.yaml && sleep 10
+
+      - name: "argo-cd: install keptn-nats (and sleep)"
+        run: kubectl -n argocd apply -f argocd/keptn-nats.yaml && sleep 10
+
+      - name: "argo-cd: install keptn-mongodb (and sleep)"
+        run: kubectl -n argocd apply -f argocd/keptn-mongodb.yaml && sleep 10
+
+      - name: "keptn: wait for keptn nats ready"
+        id: keptnWaitToReady1
+        timeout-minutes: 10
+        run: |
+          kubectl -n keptn wait --timeout=10m pod --for=condition=ready -l app=keptn-nats-cluster
+
+      - name: "keptn: debug info (nats & mongodb)"
+        if: failure() && steps.keptnWaitToReady1.outcome == 'failure'
+        run: |
+          kubectl -n keptn get deployments,sts --show-kind=true || true
+          kubectl -n keptn get pods -o wide --show-kind=true || true
+          kubectl -n keptn get sc,pv,pvc --show-kind=true || true
+          kubectl -n keptn get svc --show-kind=true || true
+          kubectl -n keptn get smon --show-kind=true || true
+#          kubectl -n keptn describe sts -l app=keptn-nats-cluster || true
+#          kubectl -n keptn describe deployments -l app.kubernetes.io/component=mongodb || true
+#          kubectl -n keptn describe pod -l app.kubernetes.io/component=mongodb || true
+
+      - name: "argo-cd: install keptn control plane (and sleep)"
+        run: kubectl -n argocd apply -f argocd/keptn.yaml && sleep 10
+
+      - name: "keptn: wait for deploy keptn services"
+        id: keptnWaitToReady2
+        timeout-minutes: 15
+        run: |
+          kubectl -n keptn wait --timeout=10m deployments --for=condition=available -l app.kubernetes.io/component=mongodb
+          kubectl -n keptn wait --timeout=15m deployments --for=condition=available -l argocd.argoproj.io/instance=keptn
+
+      - name: "keptn: debug info"
+        if: failure() && steps.keptnWaitToReady2.outcome == 'failure'
+        run: |
+          kubectl -n keptn get deployments,sts --show-kind=true || true
+          kubectl -n keptn get pods --show-kind=true -o wide || true
+          kubectl -n keptn get sc,pv,pvc --show-kind=true || true
+          kubectl -n keptn get svc --show-kind=true || true
+          kubectl -n keptn get smon --show-kind=true || true
+          echo "debug shipyard: "
+          kubectl -n keptn describe deployments/shipyard-controller || true
+          echo "debug statistic service:"
+          kubectl -n keptn describe deployments/statistics-service || true
+          kubectl -n keptn describe rs -l app.kubernetes.io/name=statistics-service || true
+          kubectl -n keptn describe pod -l app.kubernetes.io/name=statistics-service || true
+          echo "debug configuration service:"
+          kubectl -n keptn describe persistentvolumeclaim/configuration-volume || true
 
       - name: "argo-cd: show all apps"
+        if: always()
         run: argocd app list ${{ env.argocd_params }}
 
-#      - name: run test-network test - assets
-#        run: make test-network-apply-assets
-#
-#      - name: run test-network test - wait to assets
-#        run: |
-#          kubectl wait -n test-network --timeout=2m --for=condition=available deployment client
-#          kubectl wait -n test-network --timeout=2m --for=condition=available deployment podinfo
-#
-#      - name: run test-network test - debug
-#        run: kubectl -n test-network get po,svc,cnp
-#
-#      - name: run test-network test - check
-#        run: |
-#          rs=$(make test-network-check-status)
-#          echo "$rs"
-#          echo "$rs" |grep "greetings from podinfo"
+      - name: "keptn: download cli"
+        run: curl -sL https://get.keptn.sh | bash
 
-#      - name: "e2e tests: install dependencies"
-#        run: |
-#          cd tests/e2e
-#          go mod vendor
-#          go env -w GO111MODULE=auto
-#
-#      - name: "e2e tests: run"
-#        id: runE2eTests
-#        run: |
-#          cd tests/e2e
-#          go test ./... -report-dir=./junit -v
-#
-#      - name: "e2e tests: debug info"
-#        if: failure() && steps.runE2eTests.outcome == 'failure'
-#        run: |
-#          kubectl get pods -A -o wide || true
-#          kubectl get svc -A || true
-#          kubectl get secrets -A || true
-#          kubectl get cnp -A || true
-#          kubectl get ccnp -A || true
-#          kubectl get issuers -A || true
-#          kubectl get certificates -A || true
+      - name: "keptn: set login (and check keptn api)"
+        run: make keptn-set-login
 
-#      - name: Publish Test Report
-#        uses: mikepenz/action-junit-report@v3
-#        if: always()
-#        with:
-#          report_paths: 'tests/e2e/junit/*.xml'
+      - name: "keptn: wait to roll-out bridge"
+        id: keptnWaitToReady3
+        run: kubectl -n keptn rollout status --watch --timeout=5m  deployments.apps bridge
 
-#      - name: Publish Test Results
-#        uses: EnricoMi/publish-unit-test-result-action/composite@v1
-#        if: always()
-#        with:
-#          comment_mode: off
-#          files: 'tests/e2e/**/junit_*.xml'
+      - name: "keptn: wait to roll-out bridge - debug info"
+        if: failure() && steps.keptnWaitToReady3.outcome == 'failure'
+        run: |
+          kubectl -n keptn get deployment bridge || true
+          kubectl -n keptn get deployment -l app.kubernetes.io/name=bridge || true
+          kubectl -n keptn describe pod -l app.kubernetes.io/name=bridge || true
+
+      - name: "keptn: prepare helm chart for hello"
+        run: make keptn-helloserver-prepare-helm-charts
+
+      - name: "keptn: install podtato-head project & app"
+        run: make keptn-create-project-podtato-head
+
+      - name: "keptn: show projects"
+        run: keptn get projects
+
+      - name: "keptn: show services for podtato-head project"
+        run: keptn get service --project=podtato-head
+
+      - name: "run test-network test: create assets"
+        run: make test-network-apply-assets
+
+      - name: "run test-network test: wait to assets"
+        id: runNetTestWait
+        run: |
+          kubectl wait -n test-network --timeout=3m --for=condition=available deployment client
+          kubectl wait -n test-network --timeout=3m --for=condition=available deployment podinfo
+
+      - name: "run test-network test - (double) check"
+        run: |
+          rs=$(make test-network-check-status)
+          echo "$rs"
+          echo "$rs" |grep "greetings from podinfo"
+
+      - name: "run test-network test: debug"
+        if: failure() && steps.runNetTestWait.outcome == 'failure'
+        run: |
+          kubectl -n test-network get po,svc,cnp --show-kind=true || true
+          kubectl -n test-network describe deployments/client || true
+          kubectl -n test-network describe rs -l app=client || true
+
+      - name: "e2e tests: install dependencies"
+        run: |
+          cd tests/e2e
+          go mod vendor
+          go env -w GO111MODULE=auto
+
+      - name: "e2e tests: list"
+        run: go list ./...
+
+      - name: "e2e tests: run"
+        id: runE2eTests
+        run: |
+          cd tests/e2e
+          go test ./... -report-dir=./junit -v
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        if: always()
+        with:
+          comment_mode: off
+          files: 'tests/e2e/**/junit_*.xml'
+
+      - name: "e2e tests: debug info"
+        if: failure() && steps.runE2eTests.outcome == 'failure'
+        run: |
+          kubectl get pods -A -o wide --show-kind=true || true
+          kubectl get svc -A --show-kind=true || true
+          kubectl get secrets -A --show-kind=true || true
+          kubectl get cnp -A --show-kind=true || true
+          kubectl get ccnp -A --show-kind=true || true
+          kubectl get issuers -A --show-kind=true || true
+          kubectl get certificates -A --show-kind=true || true
+          kubectl get smon -A --show-kind=true || true
+
+      - name: "keptn: show status of podtato-head"
+        if: always()
+        run: |
+          kubectl -n podtato-head-dev get deployment || true
+          kubectl -n podtato-head-prod get deployment || true
+          kubectl -n podtato-head-dev get pods || true
+          kubectl -n podtato-head-prod get pods || true
+          kubectl -n podtato-head-dev get smon || true
+          kubectl -n podtato-head-prod get smon || true
+
+      - name: "debug: kind node details"
+        if: always()
+        run: kubectl describe node

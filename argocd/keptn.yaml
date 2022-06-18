@@ -16,14 +16,24 @@ spec:
       - CreateNamespace=true
   project: system-keptn
   source:
-    chart: keptn
-    repoURL: https://charts.keptn.sh
-    targetRevision: 0.13.2
+#    chart: keptn
+#    repoURL: https://charts.keptn.sh
+#    targetRevision: 0.13.6
+    # temporary switch to forked chart because of old version of mongodb chart
+    # https://github.com/keptn/keptn/pull/7444/files
+    # https://github.com/keptn/keptn/pull/6539/files
+    repoURL: https://github.com/czhujer/keptn-keptn
+    targetRevision: pm-update-mongodb-chart-for-13-x-release
+    path: installer/manifests/keptn
     helm:
       values: |
         continuous-delivery:
           enabled: false
         control-plane:
+          # fix for DigitalOcean CSI
+          configurationService:
+            storage: 1Gi
+          #
           apiGatewayNginx:
             type: ClusterIP
           bridge:
@@ -66,7 +76,7 @@ spec:
   source:
     chart: helm-service
     repoURL: https://charts.keptn.sh
-    targetRevision: 0.13.2
+    targetRevision: 0.13.6
     helm:
       values: |
         fullnameOverride: "helm-service"
@@ -90,7 +100,7 @@ spec:
   source:
     chart: jmeter-service
     repoURL: https://charts.keptn.sh
-    targetRevision: 0.13.2
+    targetRevision: 0.13.6
     helm:
       releaseName: jmeter-service
 ---
@@ -113,17 +123,17 @@ spec:
   source:
     path: chart/
     repoURL: https://github.com/keptn-contrib/prometheus-service.git
-    targetRevision: 0.7.3
+    targetRevision: 0.7.5
     helm:
       releaseName: prometheus-service
       values: |
         image:
-          tag: 0.7.3
+          tag: 0.7.5
         prometheus:
           endpoint: "http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090"
 #        distributor:
 #          image:
-#            tag: "0.13.2"
+#            tag: "0.13.6"
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -144,13 +154,13 @@ spec:
   source:
     path: chart/
     repoURL: https://github.com/keptn-contrib/argo-service.git
-    targetRevision: c44caa3
+    targetRevision: 0.9.3
     helm:
       releaseName: argo-service
       values: |
         image:
-          # tag: "0.9.1"
-          tag: "0.9.2-dev-PR-50"
+          tag: "0.9.3"
+#          tag: "0.9.2-dev-PR-50"
 #        distributor:
 #          image:
 #            tag: "0.10.0"
@@ -174,4 +184,4 @@ spec:
   source:
     path: deploy/
     repoURL: https://github.com/keptn-contrib/prometheus-service.git
-    targetRevision: 0.7.3
+    targetRevision: 0.7.5

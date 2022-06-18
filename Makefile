@@ -3,7 +3,7 @@ export CLUSTER_NAME?=keptn
 export CILIUM_VERSION?=1.11.5
 export CERT_MANAGER_CHART_VERSION=1.8.1
 export ARGOCD_CHART_VERSION=4.8.3
-export KEPTN_VERSION?=0.13.2
+export KEPTN_VERSION?=0.13.6
 export TRIVY_IMAGE_CHECK=0
 
 export ARGOCD_OPTS="--grpc-web --insecure --server argocd.127.0.0.1.nip.io"
@@ -24,16 +24,15 @@ kind-create:
 ifeq ($(TRIVY_IMAGE_CHECK), 1)
 	trivy image --severity=HIGH --exit-code=0 "$(KIND_NODE_IMAGE)"
 endif
+	# change resources for control plane pods
+	# https://github.com/kubernetes/kubeadm/pull/2184/files
+	mkdir -p /tmp/kind/kubeadm-patches
+	cp -a kind/kubeadm-patches/* /tmp/kind/kubeadm-patches
+	#
 	kind --version
 	kind create cluster --name "$(CLUSTER_NAME)" \
  		--config="kind/kind-config.yaml" \
  		--image="$(KIND_NODE_IMAGE)"
-# for testing PSP
-#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/privileged-psp.yaml
-#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/baseline-psp.yaml
-#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/psp/restricted-psp.yaml
-#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/kind/psp/cluster-roles.yaml
-#	kubectl apply -f https://github.com/appscodelabs/tasty-kube/raw/master/kind/psp/role-bindings.yaml
 # for more control planes, but no workers
 # kubectl taint nodes --all node-role.kubernetes.io/master- || true
 
@@ -88,6 +87,18 @@ cilium-install:
 	   --namespace kube-system \
 	   --wait
 
+.PHONY: cilium-install-ci
+cilium-install-ci:
+	# Add the Cilium repo
+	helm repo add cilium https://helm.cilium.io/
+	# install/upgrade the chart
+	helm upgrade --install cilium cilium/cilium --version $(CILIUM_VERSION) \
+	   -f kind/kind-values-cilium.yaml \
+	   -f kind/kind-values-cilium-resources.yaml \
+	   -f kind/kind-values-cilium-service-monitors.yaml \
+	   --namespace kube-system \
+	   --wait
+
 .PHONY: cert-manager-deploy
 cert-manager-deploy:
 	# prepare image(s)
@@ -112,14 +123,14 @@ cert-manager-deploy:
 .PHONY: argocd-deploy
 argocd-deploy:
 	# prepare image(s)
-	docker pull quay.io/argoproj/argocd:v2.3.4
-	docker pull quay.io/argoproj/argocd-applicationset:v0.4.1
-	docker pull redis:6.2.6-alpine
-	docker pull bitnami/redis-exporter:1.26.0-debian-10-r2
-	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd:v2.3.4
-	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd-applicationset:v0.4.1
-	kind load docker-image --name $(CLUSTER_NAME) redis:6.2.6-alpine
-	kind load docker-image --name $(CLUSTER_NAME) bitnami/redis-exporter:1.26.0-debian-10-r2
+#	docker pull quay.io/argoproj/argocd:v2.3.4
+#	docker pull quay.io/argoproj/argocd-applicationset:v0.4.1
+#	docker pull redis:6.2.6-alpine
+#	docker pull bitnami/redis-exporter:1.26.0-debian-10-r2
+#	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd:v2.3.4
+#	kind load docker-image --name $(CLUSTER_NAME) quay.io/argoproj/argocd-applicationset:v0.4.1
+#	kind load docker-image --name $(CLUSTER_NAME) redis:6.2.6-alpine
+#	kind load docker-image --name $(CLUSTER_NAME) bitnami/redis-exporter:1.26.0-debian-10-r2
 	# install
 	helm repo add argo https://argoproj.github.io/argo-helm
 	helm upgrade --install \
@@ -169,7 +180,8 @@ starboard-deploy:
 .PHONY: keptn-prepare-images
 keptn-prepare-images:
 	# pull image locally
-	docker pull docker.io/bitnami/mongodb:4.4.9-debian-10-r0
+	docker pull docker.io/bitnami/mongodb:4.4.13-debian-10-r33
+	docker pull docker.io/bitnami/mongodb-exporter:0.31.1-debian-10-r4
 	docker pull docker.io/keptn/distributor:$(KEPTN_VERSION)
 	docker pull docker.io/keptn/mongodb-datastore:$(KEPTN_VERSION)
 	docker pull docker.io/keptn/bridge2:$(KEPTN_VERSION)
@@ -178,11 +190,12 @@ keptn-prepare-images:
 	docker pull docker.io/keptn/shipyard-controller:$(KEPTN_VERSION)
 	docker pull docker.io/keptn/jmeter-service:$(KEPTN_VERSION)
 	docker pull docker.io/keptn/helm-service:$(KEPTN_VERSION)
-	docker pull keptncontrib/prometheus-service:0.7.2
-	docker pull keptncontrib/argo-service:0.9.1
-	docker pull docker.io/keptn/distributor:0.10.0
+	docker pull keptncontrib/prometheus-service:0.7.5
+	docker pull keptncontrib/argo-service:0.9.3
+	# docker pull docker.io/keptn/distributor:0.10.0
 ifeq ($(TRIVY_IMAGE_CHECK), 1)
-	trivy image --severity=HIGH --exit-code=0 docker.io/bitnami/mongodb:4.4.9-debian-10-r0
+	trivy image --severity=HIGH --exit-code=0 docker.io/bitnami/mongodb:4.4.13-debian-10-r33
+	trivy image --severity=HIGH --exit-code=0 docker.io/bitnami/mongodb-exporter:0.31.1-debian-10-r4
 	trivy image --severity=HIGH --exit-code=1 docker.io/keptn/distributor:$(KEPTN_VERSION)
 	trivy image --severity=HIGH --exit-code=0 docker.io/keptn/mongodb-datastore:$(KEPTN_VERSION)
 	trivy image --severity=HIGH --exit-code=0 docker.io/keptn/bridge2:$(KEPTN_VERSION)
@@ -191,12 +204,13 @@ ifeq ($(TRIVY_IMAGE_CHECK), 1)
 	trivy image --severity=HIGH --exit-code=1 docker.io/keptn/shipyard-controller:$(KEPTN_VERSION)
 	trivy image --severity=HIGH --exit-code=0 docker.io/keptn/jmeter-service:$(KEPTN_VERSION)
 	trivy image --severity=HIGH --exit-code=0 docker.io/keptn/helm-service:$(KEPTN_VERSION)
-	trivy image --severity=HIGH --exit-code=0 keptncontrib/prometheus-service:0.7.2
-	trivy image --severity=HIGH --exit-code=0 keptncontrib/argo-service:0.9.1
-	trivy image --severity=HIGH --exit-code=0 docker.io/keptn/distributor:0.10.0
+	trivy image --severity=HIGH --exit-code=0 keptncontrib/prometheus-service:0.7.5
+	trivy image --severity=HIGH --exit-code=0 keptncontrib/argo-service:0.9.3
+	# trivy image --severity=HIGH --exit-code=0 docker.io/keptn/distributor:0.10.0
 endif
 	# Load the image onto the cluster
-	kind load docker-image --name $(CLUSTER_NAME) docker.io/bitnami/mongodb:4.4.9-debian-10-r0
+	kind load docker-image --name $(CLUSTER_NAME) docker.io/bitnami/mongodb:4.4.13-debian-10-r33
+	kind load docker-image --name $(CLUSTER_NAME) docker.io/bitnami/mongodb-exporter:0.31.1-debian-10-r4
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:$(KEPTN_VERSION)
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/mongodb-datastore:$(KEPTN_VERSION)
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/bridge2:$(KEPTN_VERSION)
@@ -205,14 +219,30 @@ endif
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/shipyard-controller:$(KEPTN_VERSION)
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/jmeter-service:$(KEPTN_VERSION)
 	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/helm-service:$(KEPTN_VERSION)
-	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/prometheus-service:0.7.2
-	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/argo-service:0.9.1
-	kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:0.10.0
+	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/prometheus-service:0.7.5
+	kind load docker-image --name $(CLUSTER_NAME) keptncontrib/argo-service:0.9.3
+	# kind load docker-image --name $(CLUSTER_NAME) docker.io/keptn/distributor:0.10.0
+
+.PHONY: keptn-delete
+keptn-delete:
+	kubectl -n argocd delete -f argocd/keptn-nats.yaml || true
+	kubectl -n argocd delete -f argocd/keptn-mongodb.yaml || true
+	kubectl -n argocd delete -f argocd/keptn.yaml || true
+	kubectl delete ns keptn -R
 
 .PHONY: keptn-deploy
 keptn-deploy:
+	#	kubectl label --overwrite ns keptn \
+	#      pod-security.kubernetes.io/enforce=baseline \
+	#      pod-security.kubernetes.io/enforce-version=latest \
+	#      pod-security.kubernetes.io/warn=restricted \
+	#      pod-security.kubernetes.io/warn-version=latest \
+	#      pod-security.kubernetes.io/audit=restricted \
+	#      pod-security.kubernetes.io/audit-version=latest
 	kubectl -n argocd apply -f argocd/argo-rollouts.yaml
 	kubectl -n argocd apply -f argocd/projects/system-keptn.yaml
+	kubectl -n argocd apply -f argocd/keptn-nats.yaml
+	kubectl -n argocd apply -f argocd/keptn-mongodb.yaml
 	kubectl -n argocd apply -f argocd/keptn.yaml
 #	helm repo add keptn https://charts.keptn.sh
 #	helm upgrade --install \
@@ -319,3 +349,20 @@ keptn-create-project-sockshop:
 		--repo https://github.com/keptn/examples.git --dest-server https://kubernetes.default.svc \
 		--dest-namespace sockshop-prod --path onboarding-carts/argo/carts --revision 0.11.0 \
 		--sync-policy none
+
+.PHONY: test-network-apply-assets
+test-network-apply-assets:
+	kubectl get ns test-network 1>/dev/null 2>/dev/null || kubectl create ns test-network
+	kubectl apply -n test-network -k tests/assets/k8s/podinfo --wait=true
+	kubectl apply -n test-network -f tests/assets/k8s/client  --wait=true
+	kubectl apply -n test-network -f tests/assets/k8s/networkpolicy --wait=true
+
+.PHONY: test-network-check-status
+test-network-check-status:
+#	linkerd top deployment/podinfo --namespace test-network
+#	linkerd tap deployment/client --namespace test-network
+	kubectl exec -n test-network deploy/client -c client -- curl -s podinfo:9898
+
+.PHONY: run-ginkgo
+run-ginkgo:
+	cd tests/e2e && go test

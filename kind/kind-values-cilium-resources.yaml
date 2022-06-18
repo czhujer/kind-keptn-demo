@@ -1,0 +1,8 @@
+---
+resources:
+  requests:
+    cpu: 50m
+nodeinit:
+  resources:
+    requests:
+      cpu: 50m

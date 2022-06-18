@@ -17,7 +17,7 @@ spec:
   source:
     chart: kube-prometheus-stack
     repoURL: https://prometheus-community.github.io/helm-charts
-    targetRevision: 36.0.1
+    targetRevision: 36.0.2
     helm:
       skipCrds: true
       values: |
@@ -34,6 +34,12 @@ spec:
             dashboards:
               searchNamespace: ALL
             enableUniqueFilenames: true
+        prometheusOperator:
+          prometheusConfigReloader:
+            resources:
+              requests:
+                cpu:
+                  25m
         prometheus:
           enabled: true
           ingress:
@@ -44,6 +50,9 @@ spec:
             podMonitorSelectorNilUsesHelmValues: false
             serviceMonitorSelectorNilUsesHelmValues: false
             ruleSelectorNilUsesHelmValues: false
+            resources:
+              requests:
+                cpu: 50m
         #    scrapeInterval: 5s
         #    scrapeTimeout: 5s
         #

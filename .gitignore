@@ -1,2 +1,5 @@
 /.idea/
 /helm/*.tgz
+/tests/e2e/keptn/junit/
+/tests/e2e/vendor/
+/tests/e2e/podtato-head/junit/

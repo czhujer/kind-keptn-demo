@@ -6,7 +6,8 @@
     "czhujer"
   ],
   "kubernetes": {
-    "fileMatch": ["^kind/kind-config.*\\.yaml$"]
+    "fileMatch": ["^kind/kind-config.*\\.yaml$",
+      "tests/assets/k8s/.*\\.yaml$"]
   },
   "argocd": {
     "fileMatch": ["argocd/.+\\.yaml$"]

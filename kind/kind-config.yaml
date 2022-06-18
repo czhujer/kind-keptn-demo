@@ -31,12 +31,22 @@ featureGates:
 #      extraArgs:
 #        enable-admission-plugins: NodeRestriction,PodSecurityPolicy
 
+# change default resources for control plane pods
+#kubeadmConfigPatches:
+#  - |
+#    apiVersion: kubeadm.k8s.io/v1beta3
+#    kind: InitConfiguration
+#    patches:
+#      directory: /kubeadm-patches
+
 nodes:
   - role: control-plane
     extraMounts:
       # for SPO
-      - hostPath: /proc
-        containerPath: /hostproc
+      # - hostPath: /proc
+      #  containerPath: /hostproc
+      - hostPath: /tmp/kind/kubeadm-patches
+        containerPath: /kubeadm-patches
     kubeadmConfigPatches:
       - |
         kind: InitConfiguration
@@ -45,6 +55,9 @@ nodes:
             node-labels: "ingress-ready=true"
             seccomp-default: "true"
             feature-gates: "SeccompDefault=true"
+        # change default resources for control plane pods
+        patches:
+          directory: /kubeadm-patches
     extraPortMappings:
       - containerPort: 80
         hostPort: 80
