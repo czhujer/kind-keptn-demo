@@ -24,36 +24,22 @@ const (
 	mongodbImageName string = "docker.io/bitnami/mongodb:4.4.13-debian-10-r33"
 )
 
-var (
-	f = framework.NewDefaultFramework(frameworkName)
-)
+var f = framework.NewDefaultFramework(frameworkName)
 
 var _ = ginkgo.Describe("e2e keptn", func() {
 	f.SkipNamespaceCreation = true
 
 	//ginkgo.BeforeEach(func() {
-	//	ginkgo.By("Waiting to ketpn's pods ready")
-	//	err := e2epod.WaitForPodsRunningReady(f.ClientSet, keptnNamespace, keptnMinPods, 0, framework.PodStartShortTimeout, make(map[string]string))
-	//	framework.ExpectNoError(err)
-	//
-	//	tk := e2ekubectl.NewTestKubeconfig(framework.TestContext.CertDir, framework.TestContext.Host, framework.TestContext.KubeConfig, framework.TestContext.KubeContext, framework.TestContext.KubectlPath, "")
-	//
-	//	ginkgo.By("creating certs and issuer objects")
-	//	util.ApplyManifest(tk, "../../assets/k8s/ca/cert-manager-issuer-kind-test.yaml")
-	//	util.ApplyManifest(tk, "../../assets/k8s/ca/cert-manager-issuer-kind-ca-test.yaml")
-	//	util.ApplyManifest(tk, "../../assets/k8s/certs/cert-manager-certificate-test1.yaml")
-	//	util.ApplyManifest(tk, "../../assets/k8s/certs/cert-manager-certificate-test2.yaml")
-	//
 	//})
 
-	//var _ = ginkgo.Describe("nats server", func() {
-	//	ginkgo.It("should running", func() {
-	//		ss, err := f.ClientSet.AppsV1().StatefulSets(keptnNamespace).Get(context.TODO(), "keptn-nats-cluster", metav1.GetOptions{})
-	//		framework.ExpectNoError(err)
-	//
-	//		e2estatefulset.WaitForRunning(f.ClientSet, 1, 1, ss)
-	//	})
-	//})
+	var _ = ginkgo.Describe("nats server", func() {
+		ginkgo.It("should running", func() {
+			ss, err := f.ClientSet.AppsV1().StatefulSets(keptnNamespace).Get(context.TODO(), "keptn-nats-cluster", metav1.GetOptions{})
+			framework.ExpectNoError(err)
+
+			statefulsetWaitForRunning(f.ClientSet, 1, 1, ss)
+		})
+	})
 
 	var _ = ginkgo.Describe("mongodb server", func() {
 		ginkgo.It("should running", func() {
