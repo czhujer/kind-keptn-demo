@@ -148,8 +148,10 @@ argocd-deploy:
 
 .PHONY: nginx-ingress-deploy
 nginx-ingress-deploy:
-	docker pull k8s.gcr.io/ingress-nginx/controller:v1.2.1
-	kind load docker-image --name $(CLUSTER_NAME) k8s.gcr.io/ingress-nginx/controller:v1.2.1
+	docker pull registry.k8s.io/ingress-nginx/controller:v1.3.0
+	docker pull registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+	kind load docker-image --name $(CLUSTER_NAME) registry.k8s.io/ingress-nginx/controller:v1.3.0
+	kind load docker-image --name $(CLUSTER_NAME) registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.1.1
 	# ingress
 	kubectl -n argocd apply -f argocd/nginx-ingress.yaml
 	kubectl -n argocd apply -f argocd/gateway-api-crds.yaml
