@@ -100,7 +100,7 @@ spec:
   source:
     chart: jmeter-service
     repoURL: https://charts.keptn.sh
-    targetRevision: 0.13.6
+    targetRevision: 0.18.2
     helm:
       releaseName: jmeter-service
 ---
