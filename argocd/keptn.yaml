@@ -76,7 +76,7 @@ spec:
   source:
     chart: helm-service
     repoURL: https://charts.keptn.sh
-    targetRevision: 0.13.6
+    targetRevision: 0.18.2
     helm:
       values: |
         fullnameOverride: "helm-service"
