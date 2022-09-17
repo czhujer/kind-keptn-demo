@@ -1,10 +1,10 @@
 name: dry-run in kind
 
 env:
-  kind_version: "v0.14.0"
-  kind_kubectl_version: "v1.24.1"
+  kind_version: "v0.15.0"
+  kind_kubectl_version: "v1.25.0"
   argocd_params: "--grpc-web --insecure --server argocd.127.0.0.1.nip.io"
-  argocd_version: "2.3.4"
+  argocd_version: "2.4.11"
   argocd_projects_dir: "argocd/projects"
   go_version: '>=1.18.0'
   ACK_GINKGO_DEPRECATIONS: "1.16.5"
