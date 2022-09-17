@@ -1,6 +1,6 @@
 name: trivy check
 env:
-  TRIVY_VERSION: 0.28.1
+  TRIVY_VERSION: 0.32.0
   TRIVY_EXIT_CODE: 1
   TRIVY_IGNORE_UNFIXED: true
   TRIVY_SKIP_FILES: "k8s-the-easy-way/k8s-manifests/inspektor-gadget-all.yaml"
