@@ -154,7 +154,7 @@ spec:
   source:
     path: chart/
     repoURL: https://github.com/keptn-contrib/argo-service.git
-    targetRevision: 0.9.3
+    targetRevision: 0.9.5
     helm:
       releaseName: argo-service
       values: |
