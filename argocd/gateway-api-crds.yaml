@@ -18,5 +18,5 @@ spec:
   project: default
   source:
     repoURL: https://github.com/kubernetes-sigs/gateway-api.git
-    targetRevision: v0.7.0
+    targetRevision: v0.7.1
     path: config/crd
