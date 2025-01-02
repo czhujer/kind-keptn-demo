@@ -48,7 +48,7 @@ kx-kind:
 .PHONY: kind-install-crds
 kind-install-crds:
 	# fix prometheus-operator's CRDs
-	kubectl apply -f https://raw.githubusercontent.com/prometheus-community/helm-charts/main/charts/kube-prometheus-stack/crds/crd-servicemonitors.yaml
+	kubectl apply -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-servicemonitors.yaml
 	# for keptn
 	kubectl apply -f keptn/crd-istio-destinationrules.yaml \
 				  -f keptn/crd-istio-virtualservices.yaml
